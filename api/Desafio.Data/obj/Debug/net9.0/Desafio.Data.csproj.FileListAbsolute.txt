@@ -1,0 +1,17 @@
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\bin\Debug\net9.0\Desafio.Data.deps.json
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\bin\Debug\net9.0\Desafio.Data.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\bin\Debug\net9.0\Desafio.Data.pdb
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\bin\Debug\net9.0\Desafio.Models.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\bin\Debug\net9.0\Desafio.Models.pdb
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.csproj.AssemblyReference.cache
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.AssemblyInfoInputs.cache
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.AssemblyInfo.cs
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.csproj.CoreCompileInputs.cache
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio..14F2015B.Up2Date
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\refint\Desafio.Data.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.pdb
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\ref\Desafio.Data.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\bin\Debug\net9.0\Desafio.Data.runtimeconfig.json
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.genruntimeconfig.cache

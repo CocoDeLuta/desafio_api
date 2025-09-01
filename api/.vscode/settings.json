@@ -1,0 +1,24 @@
+{
+    "dotnet.defaultSolution": "Desafio.sln",
+    "sqltools.connections": [
+        {
+            "connectionTimeout": 15,
+            "mssqlOptions": {
+                "appName": "SQLTools",
+                "useUTC": true,
+                "encrypt": true,
+                "trustServerCertificate": true
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "MSSQL",
+            "name": "Local",
+            "connectString": "Server=localhost;Database=DesafioDB;Trusted_Connection=True;TrustServerCertificate=True;",
+            "username": "mateus",
+            "database": "DesafioDB"
+        }
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
+    "python-envs.pythonProjects": []
+}

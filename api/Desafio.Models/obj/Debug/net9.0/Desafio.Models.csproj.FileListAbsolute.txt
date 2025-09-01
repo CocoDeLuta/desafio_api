@@ -1,0 +1,11 @@
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\bin\Debug\net9.0\Desafio.Models.deps.json
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\bin\Debug\net9.0\Desafio.Models.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\bin\Debug\net9.0\Desafio.Models.pdb
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\Desafio.Models.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\Desafio.Models.AssemblyInfoInputs.cache
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\Desafio.Models.AssemblyInfo.cs
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\Desafio.Models.csproj.CoreCompileInputs.cache
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\Desafio.Models.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\refint\Desafio.Models.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\Desafio.Models.pdb
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\ref\Desafio.Models.dll
