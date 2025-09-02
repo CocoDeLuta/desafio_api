@@ -15,3 +15,4 @@ C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Services\obj\Debug\net9.0\
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Services\obj\Debug\net9.0\refint\Desafio.Services.dll
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Services\obj\Debug\net9.0\Desafio.Services.pdb
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Services\obj\Debug\net9.0\ref\Desafio.Services.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Services\obj\Debug\net9.0\Desafio.Services.sourcelink.json

@@ -9,3 +9,4 @@ C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\De
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\refint\Desafio.Models.dll
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\Desafio.Models.pdb
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\ref\Desafio.Models.dll
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Models\obj\Debug\net9.0\Desafio.Models.sourcelink.json

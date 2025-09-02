@@ -15,3 +15,4 @@ C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desa
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\ref\Desafio.Data.dll
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\bin\Debug\net9.0\Desafio.Data.runtimeconfig.json
 C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.genruntimeconfig.cache
+C:\Users\mateu\Documents\Codas\desafioAPI\api\Desafio.Data\obj\Debug\net9.0\Desafio.Data.sourcelink.json
