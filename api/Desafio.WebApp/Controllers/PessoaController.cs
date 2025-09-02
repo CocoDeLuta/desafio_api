@@ -36,4 +36,11 @@ public class PessoaController : ControllerBase
         return Ok(pessoa);
     }
 
+    [HttpPost("AdicionarPessoa")]
+    public async Task<IActionResult> AdicionarPessoa([FromBody] PessoaModel pessoa)
+    {
+        await _pessoaService.AdicionarPessoa(pessoa);
+        return CreatedAtAction(nameof(ObterPessoaPorId), new { id = pessoa.IdPessoa }, pessoa);
+    }
+
 }

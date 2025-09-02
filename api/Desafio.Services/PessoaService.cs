@@ -23,4 +23,11 @@ public class PessoaService
     {
         return await _context.Pessoas.FirstOrDefaultAsync(p => p.IdPessoa == id);
     }
+
+    public async Task<PessoaModel> AdicionarPessoa(PessoaModel pessoa)
+    {
+        _context.Pessoas.Add(pessoa);
+        await _context.SaveChangesAsync();
+        return pessoa;
+    }
 }

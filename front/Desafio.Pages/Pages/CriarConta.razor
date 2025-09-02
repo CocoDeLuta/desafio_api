@@ -1,0 +1,219 @@
+@page "/criar-conta"
+
+<h3>Criar Conta</h3>
+
+<div class="card p-3" style="max-width: 640px;">
+    <div class="mb-3 position-relative">
+        <label class="form-label" for="pessoaBusca">Pessoa</label>
+        <input id="pessoaBusca" class="form-control" placeholder="Digite o nome para buscar" @bind="buscaPessoa" @bind:event="oninput" @onfocus="MostrarSugestoes" @onblur="EsconderSugestoesComDelay" />
+        @if (mostrarSugestoes && sugestoes.Count > 0)
+        {
+            <div class="list-group position-absolute w-100 shadow" style="z-index: 1000; max-height: 240px; overflow-y: auto;">
+                @foreach (var p in sugestoes)
+                {
+                    <button type="button" class="list-group-item list-group-item-action" @onmousedown="(() => SelecionarPessoa(p))">
+                        @p.Nome (@p.Cpf)
+                    </button>
+                }
+            </div>
+        }
+        @if (pessoaSelecionada is not null)
+        {
+            <div class="form-text">Selecionado: <strong>@pessoaSelecionada.Nome</strong></div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="limite">Limite de saque diário</label>
+        <input id="limite" class="form-control" type="number" step="0.01" min="0" @bind="limiteSaqueDiario" />
+        <div class="form-text">Informe em reais (ex.: 100.50).</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="tipo">Tipo da conta</label>
+        <select id="tipo" class="form-control" @bind="tipoSelecionado">
+            @foreach (var t in tiposConta)
+            {
+                <option value="@t">@t</option>
+            }
+        </select>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" @onclick="Criar" disabled="@(isSubmitting)">Criar Conta</button>
+        <button class="btn btn-secondary" @onclick="Limpar" disabled="@(isSubmitting)">Limpar</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(mensagem))
+    {
+        <div class="alert @mensagemClasse mt-3">@mensagem</div>
+    }
+</div>
+
+@code {
+    private List<PessoaDto> todasPessoas = new();
+    private List<PessoaDto> sugestoes = new();
+    private string buscaPessoa = string.Empty;
+    private PessoaDto? pessoaSelecionada;
+    private decimal limiteSaqueDiario;
+    private string[] tiposConta = new[] { "Corrente", "Poupanca", "Salario" };
+    private string tipoSelecionado = "Corrente";
+    private bool mostrarSugestoes = false;
+    private bool isSubmitting = false;
+    private string mensagem = string.Empty;
+    private string mensagemClasse = "alert-info";
+
+    public class PessoaDto
+    {
+        public int IdPessoa { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Cpf { get; set; } = string.Empty;
+        public DateTime DataNascimento { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarPessoas();
+    }
+
+    private async Task CarregarPessoas()
+    {
+        try
+        {
+            using var http = new HttpClient();
+            var url = "http://localhost:5049/api/Pessoa/ObterTodasPessoas";
+            var json = await http.GetStringAsync(url);
+            var pessoas = System.Text.Json.JsonSerializer.Deserialize<List<PessoaDto>>(json, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            todasPessoas = pessoas ?? new List<PessoaDto>();
+        }
+        catch (Exception ex)
+        {
+            Notificar($"Erro ao carregar pessoas: {ex.Message}", true);
+        }
+        AtualizarSugestoes();
+    }
+
+    private void MostrarSugestoes()
+    {
+        mostrarSugestoes = true;
+        AtualizarSugestoes();
+    }
+
+    private async Task EsconderSugestoesComDelay()
+    {
+        await Task.Delay(150);
+        mostrarSugestoes = false;
+        StateHasChanged();
+    }
+
+    private void AtualizarSugestoes()
+    {
+        var termo = (buscaPessoa ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(termo))
+        {
+            sugestoes = todasPessoas.Take(8).ToList();
+            pessoaSelecionada = null;
+            return;
+        }
+        sugestoes = todasPessoas
+            .Where(p => p.Nome.Contains(termo, StringComparison.OrdinalIgnoreCase))
+            .Take(8)
+            .ToList();
+    }
+
+    private void SelecionarPessoa(PessoaDto p)
+    {
+        pessoaSelecionada = p;
+        buscaPessoa = p.Nome;
+        mostrarSugestoes = false;
+    }
+
+    private void Limpar()
+    {
+        pessoaSelecionada = null;
+        buscaPessoa = string.Empty;
+        limiteSaqueDiario = 0m;
+        tipoSelecionado = tiposConta[0];
+        mensagem = string.Empty;
+    }
+
+    private bool Validar()
+    {
+        if (pessoaSelecionada is null)
+        {
+            Notificar("Selecione uma pessoa.", true);
+            return false;
+        }
+        if (limiteSaqueDiario < 0)
+        {
+            Notificar("O limite de saque deve ser zero ou positivo.", true);
+            return false;
+        }
+        if (!tiposConta.Contains(tipoSelecionado))
+        {
+            Notificar("Tipo de conta inválido.", true);
+            return false;
+        }
+        return true;
+    }
+
+    private void Notificar(string texto, bool erro)
+    {
+        mensagem = texto;
+        mensagemClasse = erro ? "alert-danger" : "alert-success";
+    }
+
+    private async Task Criar()
+    {
+        if (isSubmitting) return;
+        if (!Validar()) return;
+
+        try
+        {
+            isSubmitting = true;
+            using var http = new HttpClient();
+            var url = "http://localhost:5049/api/Conta/InserirConta";
+
+            var payload = new
+            {
+                pessoa = new {
+                    idPessoa = pessoaSelecionada!.IdPessoa,
+                    nome = pessoaSelecionada!.Nome,
+                    cpf = pessoaSelecionada!.Cpf,
+                    dataNascimento = pessoaSelecionada!.DataNascimento.ToString("O")
+                },
+                limiteSaqueDiario = limiteSaqueDiario,
+                tipoConta = tipoSelecionado,
+                ativo = true,
+                dataCriacao = DateTime.Now.ToString("O")
+            };
+
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+            var response = await http.PostAsync(url, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Notificar("Conta criada com sucesso!", false);
+                Limpar();
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Notificar($"Falha ao criar conta: {(int)response.StatusCode} - {body}", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Notificar($"Erro: {ex.Message}", true);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
+
+

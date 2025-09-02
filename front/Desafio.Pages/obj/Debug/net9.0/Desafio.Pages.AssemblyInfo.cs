@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Desafio.Pages")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f7a3753c010981b07d9d807bf9e79e33ad69ac2d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e7323dd31b4ffa7e6cfaee19fc935544ff3ab68f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Desafio.Pages")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Desafio.Pages")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

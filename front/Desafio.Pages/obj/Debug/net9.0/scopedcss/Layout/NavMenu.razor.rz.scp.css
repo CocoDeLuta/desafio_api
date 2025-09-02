@@ -81,3 +81,14 @@
         overflow-y: auto;
     }
 }
+
+/* Submenu para Operações */
+.submenu[b-f0473421eg] {
+    padding-left: 1rem;
+}
+
+.submenu .nav-link[b-f0473421eg] {
+    height: 2.25rem;
+    line-height: 2.25rem;
+    font-size: 0.85rem;
+}

@@ -1,0 +1,185 @@
+@page "/editar-conta/{id:int}"
+
+<h3>Editar Conta</h3>
+
+@if (carregando)
+{
+    <p>Carregando...</p>
+}
+else if (erro != null)
+{
+    <div class="alert alert-danger">@erro</div>
+}
+else if (conta == null)
+{
+    <div class="alert alert-warning">Conta não encontrada.</div>
+}
+else
+{
+    <div class="card p-3" style="max-width: 640px;">
+        <div class="mb-3">
+            <label class="form-label">ID da Conta</label>
+            <input class="form-control" value="@conta.IdConta" disabled />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Pessoa</label>
+            <input class="form-control" value="@conta.Pessoa?.Nome" disabled />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="limite">Limite de saque diário</label>
+            <input id="limite" class="form-control" type="number" step="0.01" min="0" @bind="conta.LimiteSaqueDiario" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="tipo">Tipo da conta</label>
+            <select id="tipo" class="form-control" @bind="conta.TipoConta">
+                @foreach (var t in tiposConta)
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
+        </div>
+        <div class="form-check mb-3">
+            <input id="ativo" class="form-check-input" type="checkbox" @bind="conta.Ativo" />
+            <label class="form-check-label" for="ativo">Ativo</label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" @onclick="Salvar" disabled="@(salvando)">Salvar</button>
+            <button class="btn btn-secondary" @onclick="Voltar" disabled="@(salvando)">Voltar</button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(mensagem))
+        {
+            <div class="alert @mensagemClasse mt-3">@mensagem</div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private ContaDto? conta;
+    private bool carregando = true;
+    private bool salvando = false;
+    private string? erro;
+    private string mensagem = string.Empty;
+    private string mensagemClasse = "alert-info";
+    private string[] tiposConta = new[] { "Corrente", "Poupanca", "Salario" };
+
+    public class PessoaDto
+    {
+        public int IdPessoa { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Cpf { get; set; } = string.Empty;
+        public DateTime DataNascimento { get; set; }
+    }
+    public class ContaDto
+    {
+        public int IdConta { get; set; }
+        public PessoaDto? Pessoa { get; set; }
+        public decimal LimiteSaqueDiario { get; set; }
+        public bool Ativo { get; set; }
+        public string TipoConta { get; set; } = "Corrente";
+        public DateTime DataCriacao { get; set; }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Carregar();
+    }
+
+    private async Task Carregar()
+    {
+        try
+        {
+            carregando = true;
+            using var http = new HttpClient();
+            var url = $"http://localhost:5049/api/Conta/ObterContaPorId/{id}";
+            var json = await http.GetStringAsync(url);
+            var resp = System.Text.Json.JsonSerializer.Deserialize<ContaDto>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            conta = resp;
+            await GarantirPessoaCompleta(http);
+        }
+        catch (Exception ex)
+        {
+            erro = $"Erro ao carregar conta: {ex.Message}";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private async Task GarantirPessoaCompleta(HttpClient http)
+    {
+        if (conta?.Pessoa == null) return;
+        // Se CPF estiver vazio, tenta buscar a pessoa por id
+        if (string.IsNullOrWhiteSpace(conta.Pessoa.Cpf))
+        {
+            try
+            {
+                var urlPessoa = $"http://localhost:5049/api/Pessoa/ObterPessoaPorId/{conta.Pessoa.IdPessoa}";
+                var jsonPessoa = await http.GetStringAsync(urlPessoa);
+                var pessoa = System.Text.Json.JsonSerializer.Deserialize<PessoaDto>(jsonPessoa, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (pessoa != null)
+                {
+                    conta.Pessoa = pessoa;
+                }
+            }
+            catch { }
+        }
+    }
+
+    private async Task Salvar()
+    {
+        if (conta == null) return;
+        try
+        {
+            salvando = true;
+            using var http = new HttpClient();
+            var url = "http://localhost:5049/api/Conta/AtualizarConta";
+            var payload = new
+            {
+                idConta = conta.IdConta,
+                pessoa = conta.Pessoa is not null ? new { idPessoa = conta.Pessoa.IdPessoa, nome = conta.Pessoa.Nome, cpf = conta.Pessoa.Cpf, dataNascimento = conta.Pessoa.DataNascimento.ToString("O") } : null,
+                limiteSaqueDiario = conta.LimiteSaqueDiario,
+                ativo = conta.Ativo,
+                tipoConta = conta.TipoConta
+            };
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+            var response = await http.PutAsync(url, content);
+            if (response.IsSuccessStatusCode)
+            {
+                Notificar("Conta atualizada com sucesso!", false);
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Notificar($"Falha ao salvar: {(int)response.StatusCode} - {body}", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Notificar($"Erro: {ex.Message}", true);
+        }
+        finally
+        {
+            salvando = false;
+        }
+    }
+
+    private void Voltar()
+    {
+        Navigation.NavigateTo("/consultas");
+    }
+
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private void Notificar(string texto, bool erro)
+    {
+        mensagem = texto;
+        mensagemClasse = erro ? "alert-danger" : "alert-success";
+    }
+}
+
+

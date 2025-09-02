@@ -1,0 +1,116 @@
+@page "/cadastrar-pessoa"
+
+<h3>Cadastrar Pessoa</h3>
+
+<div class="card p-3" style="max-width: 520px;">
+    <div class="mb-3">
+        <label class="form-label" for="nome">Nome</label>
+        <input id="nome" class="form-control" @bind="pessoa.Nome" placeholder="Nome completo" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label" for="cpf">CPF</label>
+        <input id="cpf" class="form-control" @bind="pessoa.Cpf" placeholder="Somente números" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label" for="dataNasc">Data de Nascimento</label>
+        <InputDate id="dataNasc" class="form-control" @bind-Value="pessoa.DataNascimento" TValue="DateTime?" min="1900-01-01" max="@maxDate" />
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" @onclick="Cadastrar" disabled="@(isSubmitting)">Adicionar</button>
+        <button class="btn btn-secondary" @onclick="Limpar" disabled="@(isSubmitting)">Limpar</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(mensagem))
+    {
+        <div class="alert @mensagemClasse mt-3">@mensagem</div>
+    }
+</div>
+
+@code {
+    private PessoaDto pessoa = new();
+    private bool isSubmitting = false;
+    private string mensagem = string.Empty;
+    private string mensagemClasse = "alert-info";
+    private readonly string maxDate = DateTime.Today.ToString("yyyy-MM-dd");
+
+    public class PessoaDto
+    {
+        public int IdPessoa { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Cpf { get; set; } = string.Empty;
+        public DateTime? DataNascimento { get; set; }
+    }
+
+    private void Limpar()
+    {
+        pessoa = new PessoaDto();
+        
+        mensagem = string.Empty;
+    }
+
+    private bool Validar()
+    {
+        if (string.IsNullOrWhiteSpace(pessoa.Nome)) { Notificar("Informe o nome.", true); return false; }
+        if (string.IsNullOrWhiteSpace(pessoa.Cpf)) { Notificar("Informe o CPF.", true); return false; }
+        if (!pessoa.DataNascimento.HasValue) { Notificar("Informe a data de nascimento.", true); return false; }
+        if (pessoa.DataNascimento.Value < new DateTime(1900, 1, 1) || pessoa.DataNascimento.Value > DateTime.Today)
+        {
+            Notificar("Data de nascimento fora do intervalo válido.", true);
+            return false;
+        }
+        return true;
+    }
+
+    private void Notificar(string texto, bool erro)
+    {
+        mensagem = texto;
+        mensagemClasse = erro ? "alert-danger" : "alert-success";
+    }
+
+    private async Task Cadastrar()
+    {
+        if (isSubmitting) return;
+        if (!Validar()) return;
+
+        try
+        {
+            isSubmitting = true;
+
+            using var http = new HttpClient();
+            var url = "http://localhost:5049/api/Pessoa/AdicionarPessoa";
+
+            var payload = new
+            {
+                idPessoa = pessoa.IdPessoa,
+                nome = pessoa.Nome,
+                cpf = pessoa.Cpf,
+                dataNascimento = pessoa.DataNascimento?.ToString("O")
+            };
+
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+            var response = await http.PostAsync(url, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Notificar("Pessoa cadastrada com sucesso!", false);
+                Limpar();
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Notificar($"Falha ao cadastrar: {(int)response.StatusCode} - {body}", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Notificar($"Erro: {ex.Message}", true);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
+
+

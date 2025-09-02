@@ -13,19 +13,20 @@
     <div class="controls">
         <div class="form-group">
             <label for="opcao">Tipo de Consulta:</label>
-            <select id="opcao" class="form-control" @bind="opcaoSelecionada">
+            <select id="opcao" class="form-control" @bind="opcaoSelecionada" @bind:after="OnOpcaoChanged">
                 <option value="contas">Contas</option>
                 <option value="transacoes">Transações</option>
                 <option value="pessoas">Pessoas</option>
             </select>
         </div>
         
-        <button class="btn-primary" @onclick="BuscarDados">
-            Buscar Dados
-        </button>
+        <div class="form-group">
+            <label for="pesquisa">Pesquisa:</label>
+            <input id="pesquisa" class="form-control" placeholder="@PlaceholderPesquisa" @bind="termoPesquisa" @bind:event="oninput" @bind:after="OnPesquisaChanged" />
+        </div>
     </div>
 
-    @if (dados != null && dados.Count > 0)
+    @if (dadosFiltrados != null && dadosFiltrados.Count > 0)
     {
         <div class="table-container">
             <table class="table">
@@ -33,12 +34,22 @@
                     <tr>
                         @foreach (var col in colunas)
                         {
-                            <th>@col</th>
+                            <th @onclick="(() => OrdenarPor(col))" style="cursor: pointer; white-space: nowrap;">
+                                @col
+                                @if (ordenacaoColuna == col)
+                                {
+                                    <span>@(ordenacaoAsc ? "▲" : "▼")</span>
+                                }
+                            </th>
+                        }
+                        @if (opcaoSelecionada == "contas" || opcaoSelecionada == "pessoas")
+                        {
+                            <th>Ações</th>
                         }
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in dados)
+                    @foreach (var item in dadosFiltrados)
                     {
                         <tr>
                             @foreach (var col in colunas)
@@ -59,6 +70,12 @@
                                      }
                                  </td>
                             }
+                            @if (opcaoSelecionada == "contas" || opcaoSelecionada == "pessoas")
+                            {
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" @onclick="(() => Editar(item))">Editar</button>
+                                </td>
+                            }
                         </tr>
                     }
                 </tbody>
@@ -74,9 +91,14 @@
 </div>
 
 @code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
     private string opcaoSelecionada = "contas";
     private List<Dictionary<string, object>>? dados = null;
+    private List<Dictionary<string, object>>? dadosFiltrados = null;
     private List<string> colunas = new();
+    private string termoPesquisa = string.Empty;
+    private string? ordenacaoColuna = null;
+    private bool ordenacaoAsc = true;
 
     // Classes para deserialização
     public class PessoaApiModel
@@ -163,21 +185,39 @@
                         }
                     }
                     
-                    // Formatar saldo e limite
+                    // Formatar saldo e limite (tratando cultura e JsonElement numérico)
                     if (item.ContainsKey("saldo"))
                     {
-                        if (decimal.TryParse(item["saldo"].ToString(), out var saldo))
+                        try
                         {
-                            item["saldo"] = saldo.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            if (item["saldo"] is System.Text.Json.JsonElement saldoEl && saldoEl.ValueKind == System.Text.Json.JsonValueKind.Number)
+                            {
+                                var saldo = saldoEl.GetDecimal();
+                                item["saldo"] = saldo.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            }
+                            else if (decimal.TryParse(item["saldo"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var saldo))
+                            {
+                                item["saldo"] = saldo.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            }
                         }
+                        catch { }
                     }
                     
                     if (item.ContainsKey("limiteSaqueDiario"))
                     {
-                        if (decimal.TryParse(item["limiteSaqueDiario"].ToString(), out var limite))
+                        try
                         {
-                            item["limiteSaqueDiario"] = limite.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            if (item["limiteSaqueDiario"] is System.Text.Json.JsonElement limiteEl && limiteEl.ValueKind == System.Text.Json.JsonValueKind.Number)
+                            {
+                                var limite = limiteEl.GetDecimal();
+                                item["limiteSaqueDiario"] = limite.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            }
+                            else if (decimal.TryParse(item["limiteSaqueDiario"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var limite))
+                            {
+                                item["limiteSaqueDiario"] = limite.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            }
                         }
+                        catch { }
                     }
                     
                     // Formatar data de criação
@@ -215,13 +255,22 @@
                         }
                     }
                     
-                    // Formatar valor
+                    // Formatar valor (tratando cultura e JsonElement numérico)
                     if (item.ContainsKey("valor"))
                     {
-                        if (decimal.TryParse(item["valor"].ToString(), out var valor))
+                        try
                         {
-                            item["valor"] = valor.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            if (item["valor"] is System.Text.Json.JsonElement valorEl && valorEl.ValueKind == System.Text.Json.JsonValueKind.Number)
+                            {
+                                var valor = valorEl.GetDecimal();
+                                item["valor"] = valor.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            }
+                            else if (decimal.TryParse(item["valor"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var valor))
+                            {
+                                item["valor"] = valor.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
+                            }
                         }
+                        catch { }
                     }
                     
                     // Formatar data da transação
@@ -248,12 +297,155 @@
                     }
                 }
             }
+
+            AplicarFiltro();
         }
         else
         {
             dados = new List<Dictionary<string, object>>();
             colunas = new List<string>();
+            dadosFiltrados = new List<Dictionary<string, object>>();
         }
+    }
+
+    private void AplicarFiltro()
+    {
+        if (dados == null)
+        {
+            dadosFiltrados = new List<Dictionary<string, object>>();
+            return;
+        }
+
+        var termo = (termoPesquisa ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(termo))
+        {
+            dadosFiltrados = dados.ToList();
+            AplicarOrdenacao();
+            return;
+        }
+
+        if (opcaoSelecionada == "contas")
+        {
+            dadosFiltrados = dados.Where(d =>
+                (d.ContainsKey("pessoa") && d["pessoa"]?.ToString()?.Contains(termo, StringComparison.OrdinalIgnoreCase) == true)
+            ).ToList();
+        }
+        else if (opcaoSelecionada == "pessoas")
+        {
+            dadosFiltrados = dados.Where(d =>
+                (d.ContainsKey("nome") && d["nome"]?.ToString()?.Contains(termo, StringComparison.OrdinalIgnoreCase) == true)
+            ).ToList();
+        }
+        else if (opcaoSelecionada == "transacoes")
+        {
+            dadosFiltrados = dados.Where(d =>
+                (d.ContainsKey("conta") && d["conta"]?.ToString()?.Contains(termo, StringComparison.OrdinalIgnoreCase) == true)
+            ).ToList();
+        }
+        else
+        {
+            dadosFiltrados = dados.ToList();
+        }
+
+        AplicarOrdenacao();
+    }
+
+    private void OrdenarPor(string coluna)
+    {
+        if (ordenacaoColuna == coluna)
+        {
+            ordenacaoAsc = !ordenacaoAsc;
+        }
+        else
+        {
+            ordenacaoColuna = coluna;
+            ordenacaoAsc = true;
+        }
+        AplicarOrdenacao();
+    }
+
+    private void AplicarOrdenacao()
+    {
+        if (dadosFiltrados == null || string.IsNullOrEmpty(ordenacaoColuna)) return;
+
+        Func<Dictionary<string, object>, object?> keySelector = d => d.ContainsKey(ordenacaoColuna) ? d[ordenacaoColuna] : null;
+
+        int CompareValues(object? a, object? b)
+        {
+            if (a == null && b == null) return 0;
+            if (a == null) return -1;
+            if (b == null) return 1;
+
+            // Tentar comparar como número
+            if (decimal.TryParse(a.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var da) &&
+                decimal.TryParse(b.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var db))
+            {
+                return da.CompareTo(db);
+            }
+
+            // Tentar comparar como data
+            if (DateTime.TryParse(a.ToString(), out var ta) && DateTime.TryParse(b.ToString(), out var tb))
+            {
+                return ta.CompareTo(tb);
+            }
+
+            // Comparar como string
+            return string.Compare(a.ToString(), b.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        dadosFiltrados = (ordenacaoAsc
+            ? dadosFiltrados.OrderBy(keySelector, Comparer<object?>.Create(CompareValues))
+            : dadosFiltrados.OrderByDescending(keySelector, Comparer<object?>.Create(CompareValues)))
+            .ToList();
+    }
+
+    private string PlaceholderPesquisa => opcaoSelecionada switch
+    {
+        "contas" => "Pesquisar por nome da pessoa",
+        "pessoas" => "Pesquisar por nome",
+        "transacoes" => "Pesquisar por número da conta",
+        _ => "Pesquisar"
+    };
+
+    protected override void OnParametersSet()
+    {
+        AplicarFiltro();
+    }
+
+    private void Editar(Dictionary<string, object> item)
+    {
+        if (opcaoSelecionada == "contas")
+        {
+            // Id pode vir como "IdConta" dependendo da serialização
+            var chaveId = item.Keys.FirstOrDefault(k => string.Equals(k, "idConta", StringComparison.OrdinalIgnoreCase));
+            if (chaveId != null)
+            {
+                var idStr = item[chaveId]?.ToString();
+                if (int.TryParse(idStr, out var id))
+                {
+                    Nav.NavigateTo($"/editar-conta/{id}");
+                    return;
+                }
+            }
+        }
+        // Pessoas manteremos placeholder por enquanto
+        Console.WriteLine($"Editar: {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await BuscarDados();
+    }
+
+    private async Task OnOpcaoChanged()
+    {
+        await BuscarDados();
+    }
+
+    private Task OnPesquisaChanged()
+    {
+        AplicarFiltro();
+        return Task.CompletedTask;
     }
 
     private List<Dictionary<string, object>> ConverterContasParaDicionario(List<ContaApiModel>? contas)

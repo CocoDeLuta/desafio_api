@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "dcK2SxRxpWc=",
+  "dgSpecHash": "7Teiw0yZNfM=",
   "success": true,
-  "projectFilePath": "C:\\Users\\mateu\\Documents\\Codas\\desafioAPI\\front\\Desafio.Pages\\Desafio.Pages.csproj",
+  "projectFilePath": "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\front\\Desafio.Pages\\Desafio.Pages.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\mateu\\.nuget\\packages\\microsoft.aspnetcore.authorization\\9.0.3\\microsoft.aspnetcore.authorization.9.0.3.nupkg.sha512",
     "C:\\Users\\mateu\\.nuget\\packages\\microsoft.aspnetcore.components\\9.0.3\\microsoft.aspnetcore.components.9.0.3.nupkg.sha512",
@@ -28,9 +28,9 @@
     "C:\\Users\\mateu\\.nuget\\packages\\microsoft.extensions.primitives\\9.0.3\\microsoft.extensions.primitives.9.0.3.nupkg.sha512",
     "C:\\Users\\mateu\\.nuget\\packages\\microsoft.jsinterop\\9.0.3\\microsoft.jsinterop.9.0.3.nupkg.sha512",
     "C:\\Users\\mateu\\.nuget\\packages\\microsoft.jsinterop.webassembly\\9.0.3\\microsoft.jsinterop.webassembly.9.0.3.nupkg.sha512",
-    "C:\\Users\\mateu\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.3\\microsoft.net.illink.tasks.9.0.3.nupkg.sha512",
-    "C:\\Users\\mateu\\.nuget\\packages\\microsoft.net.sdk.webassembly.pack\\9.0.3\\microsoft.net.sdk.webassembly.pack.9.0.3.nupkg.sha512",
-    "C:\\Users\\mateu\\.nuget\\packages\\microsoft.netcore.app.runtime.mono.browser-wasm\\9.0.3\\microsoft.netcore.app.runtime.mono.browser-wasm.9.0.3.nupkg.sha512"
+    "C:\\Users\\mateu\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.8\\microsoft.net.illink.tasks.9.0.8.nupkg.sha512",
+    "C:\\Users\\mateu\\.nuget\\packages\\microsoft.net.sdk.webassembly.pack\\9.0.8\\microsoft.net.sdk.webassembly.pack.9.0.8.nupkg.sha512",
+    "C:\\Users\\mateu\\.nuget\\packages\\microsoft.netcore.app.runtime.mono.browser-wasm\\9.0.8\\microsoft.netcore.app.runtime.mono.browser-wasm.9.0.8.nupkg.sha512"
   ],
   "logs": []
 }
