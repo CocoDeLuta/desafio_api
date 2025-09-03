@@ -8,24 +8,19 @@
     "net9.0": []
   },
   "packageFolders": {
-    "C:\\Users\\mateu\\.nuget\\packages\\": {},
-    "E:\\Visual Studio Community\\Shared\\NuGetPackages": {}
+    "C:\\Users\\mateu\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\mateu\\Documents\\Codas\\desafioAPI\\api\\Desafio.Models\\Desafio.Models.csproj",
+      "projectUniqueName": "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\api\\Desafio.Models\\Desafio.Models.csproj",
       "projectName": "Desafio.Models",
-      "projectPath": "C:\\Users\\mateu\\Documents\\Codas\\desafioAPI\\api\\Desafio.Models\\Desafio.Models.csproj",
+      "projectPath": "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\api\\Desafio.Models\\Desafio.Models.csproj",
       "packagesPath": "C:\\Users\\mateu\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\mateu\\Documents\\Codas\\desafioAPI\\api\\Desafio.Models\\obj\\",
+      "outputPath": "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\api\\Desafio.Models\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "E:\\Visual Studio Community\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
         "C:\\Users\\mateu\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -51,7 +46,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -72,7 +67,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

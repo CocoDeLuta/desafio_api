@@ -1,0 +1,67 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Desafio.Pages</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Início
+            </NavLink>
+            
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="consultas">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Consultas
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <a class="nav-link" href="javascript:void(0)" @onclick="ToggleOperacoes">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Operações
+            </a>
+            @if (expandOperacoes)
+            {
+                <div class="submenu">
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/criar-conta">
+                            Criar Conta
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/cadastrar-pessoa">
+                            Cadastrar Pessoa
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/transacoes">
+                            Transações
+                        </NavLink>
+                    </div>
+                </div>
+            }
+        </div>
+
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private bool expandOperacoes = false;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void ToggleOperacoes()
+    {
+        expandOperacoes = !expandOperacoes;
+    }
+}

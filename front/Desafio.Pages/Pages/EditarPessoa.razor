@@ -1,0 +1,171 @@
+@page "/editar-pessoa/{id:int}"
+
+<!-- Página para editar dados de uma pessoa (nome e CPF) -->
+
+<h3>Editar Pessoa</h3>
+
+@if (carregando)
+{
+    <p>Carregando...</p>
+}
+else if (erro != null)
+{
+    <div class="alert alert-danger">@erro</div>
+}
+else if (pessoa == null)
+{
+    <div class="alert alert-warning">Pessoa não encontrada.</div>
+}
+else
+{
+    <div class="card p-3" style="max-width: 640px;">
+        <div class="mb-3">
+            <label class="form-label">ID da Pessoa</label>
+            <input class="form-control" value="@pessoa.IdPessoa" disabled />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="nome">Nome</label>
+            <input id="nome" class="form-control" @bind="pessoa.Nome" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="cpf">CPF</label>
+            <input id="cpf" class="form-control" @bind="pessoa.Cpf" @bind:event="oninput" @bind:after="OnCpfAfter" inputmode="numeric" />
+            <div class="form-text">Somente números. Deve conter 11 dígitos.</div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" @onclick="Salvar" disabled="@(salvando)">Salvar</button>
+            <button class="btn btn-secondary" @onclick="Voltar" disabled="@(salvando)">Voltar</button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(mensagem))
+        {
+            <div class="alert @mensagemClasse mt-3">@mensagem</div>
+        }
+    </div>
+}
+
+@code {
+    // Parâmetro de rota com o id da pessoa a ser editada
+    [Parameter] public int id { get; set; }
+
+    // Estado local da tela
+    private PessoaDto? pessoa;
+    private bool carregando = true;
+    private bool salvando = false;
+    private string? erro;
+    private string mensagem = string.Empty;
+    private string mensagemClasse = "alert-info";
+
+    // Modelo simples para trafegar com a API
+    public class PessoaDto
+    {
+        public int IdPessoa { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Cpf { get; set; } = string.Empty;
+        public DateTime? DataNascimento { get; set; }
+    }
+
+    // Dispara o carregamento quando o parâmetro de rota muda
+    protected override async Task OnParametersSetAsync()
+    {
+        await Carregar();
+    }
+
+    // Busca a pessoa por id na API e popula o formulário
+    private async Task Carregar()
+    {
+        try
+        {
+            carregando = true;
+            using var http = new HttpClient();
+            var url = $"http://localhost:5049/api/Pessoa/ObterPessoaPorId/{id}";
+            var json = await http.GetStringAsync(url);
+            var resp = System.Text.Json.JsonSerializer.Deserialize<PessoaDto>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            pessoa = resp;
+        }
+        catch (Exception ex)
+        {
+            erro = $"Erro ao carregar pessoa: {ex.Message}";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    // Valida, normaliza CPF e envia atualização para a API
+    private async Task Salvar()
+    {
+        if (pessoa == null) return;
+        if (string.IsNullOrWhiteSpace(pessoa.Nome)) { Notificar("Informe o nome.", true); return; }
+        pessoa.Cpf = SanitizeCpf(pessoa.Cpf);
+        if (string.IsNullOrWhiteSpace(pessoa.Cpf)) { Notificar("Informe o CPF.", true); return; }
+        if (pessoa.Cpf.Length != 11) { Notificar("CPF inválido. Deve conter 11 dígitos.", true); return; }
+
+        try
+        {
+            salvando = true;
+            using var http = new HttpClient();
+            var url = "http://localhost:5049/api/Pessoa/AtualizarPessoa";
+            var payload = new
+            {
+                idPessoa = pessoa.IdPessoa,
+                nome = pessoa.Nome,
+                cpf = pessoa.Cpf,
+                dataNascimento = pessoa.DataNascimento?.ToString("O")
+            };
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+            var response = await http.PutAsync(url, content);
+            if (response.IsSuccessStatusCode)
+            {
+                Notificar("Pessoa atualizada com sucesso!", false);
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Notificar($"Falha ao salvar: {(int)response.StatusCode} - {body}", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Notificar($"Erro: {ex.Message}", true);
+        }
+        finally
+        {
+            salvando = false;
+        }
+    }
+
+    // Volta para a tela de consultas
+    private void Voltar()
+    {
+        Navigation.NavigateTo("/consultas");
+    }
+
+    // Serviço de navegação do Blazor
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    // Utilitário para exibir mensagens de feedback
+    private void Notificar(string texto, bool erro)
+    {
+        mensagem = texto;
+        mensagemClasse = erro ? "alert-danger" : "alert-success";
+    }
+
+    // Sanitiza o CPF sempre que o valor é alterado via binding
+    private void OnCpfAfter()
+    {
+        pessoa!.Cpf = SanitizeCpf(pessoa!.Cpf);
+    }
+
+    // Mantém apenas números e limita a 11 dígitos
+    private static string SanitizeCpf(string? cpf)
+    {
+        var digits = new string((cpf ?? string.Empty).Where(char.IsDigit).ToArray());
+        if (digits.Length > 11) digits = digits.Substring(0, 11);
+        return digits;
+    }
+}
+
+

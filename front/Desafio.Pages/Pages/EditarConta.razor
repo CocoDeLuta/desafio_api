@@ -1,0 +1,255 @@
+@page "/editar-conta/{id:int}"
+
+<!-- Página para editar dados de uma conta (limite, tipo, ativo) -->
+
+<h3>Editar Conta</h3>
+
+@if (carregando)
+{
+    <p>Carregando...</p>
+}
+else if (erro != null)
+{
+    <div class="alert alert-danger">@erro</div>
+}
+else if (conta == null)
+{
+    <div class="alert alert-warning">Conta não encontrada.</div>
+}
+else
+{
+    <div class="card p-3" style="max-width: 640px;">
+        <div class="mb-3">
+            <label class="form-label">ID da Conta</label>
+            <input class="form-control" value="@conta.IdConta" disabled />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Pessoa</label>
+            <input class="form-control" value="@conta.Pessoa?.Nome" disabled />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="limite">Limite de saque diário</label>
+            <input id="limite" class="form-control" type="text" @bind="limiteTexto" @bind:event="oninput" @bind:after="OnLimiteAfter" @onblur="OnLimiteBlur" />
+            <div class="form-text">Informe com duas casas decimais. Ex.: 100,50</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="tipo">Tipo da conta</label>
+            <select id="tipo" class="form-control" @bind="conta.TipoConta">
+                @foreach (var t in tiposConta)
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
+        </div>
+        <div class="form-check mb-3">
+            <input id="ativo" class="form-check-input" type="checkbox" @bind="conta.Ativo" />
+            <label class="form-check-label" for="ativo">Ativo</label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" @onclick="Salvar" disabled="@(salvando)">Salvar</button>
+            <button class="btn btn-secondary" @onclick="Voltar" disabled="@(salvando)">Voltar</button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(mensagem))
+        {
+            <div class="alert @mensagemClasse mt-3">@mensagem</div>
+        }
+    </div>
+}
+
+@code {
+    // Parâmetro de rota
+    [Parameter] public int id { get; set; }
+
+    // Estado local
+    private ContaDto? conta;
+    private bool carregando = true;
+    private bool salvando = false;
+    private string? erro;
+    private string mensagem = string.Empty;
+    private string mensagemClasse = "alert-info";
+    private string[] tiposConta = new[] { "Corrente", "Poupanca", "Salario" };
+    private string limiteTexto = string.Empty;
+
+    // DTOs simples usados na tela
+    public class PessoaDto
+    {
+        public int IdPessoa { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Cpf { get; set; } = string.Empty;
+        public DateTime DataNascimento { get; set; }
+    }
+    public class ContaDto
+    {
+        public int IdConta { get; set; }
+        public PessoaDto? Pessoa { get; set; }
+        public decimal LimiteSaqueDiario { get; set; }
+        public bool Ativo { get; set; }
+        public string TipoConta { get; set; } = "Corrente";
+        public DateTime DataCriacao { get; set; }
+    }
+
+    // Carrega a conta ao receber/mudar o id
+    protected override async Task OnParametersSetAsync()
+    {
+        await Carregar();
+    }
+
+    // Busca a conta na API e sincroniza o campo de limite como texto
+    private async Task Carregar()
+    {
+        try
+        {
+            carregando = true;
+            using var http = new HttpClient();
+            var url = $"http://localhost:5049/api/Conta/ObterContaPorId/{id}";
+            var json = await http.GetStringAsync(url);
+            var resp = System.Text.Json.JsonSerializer.Deserialize<ContaDto>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            conta = resp;
+            await GarantirPessoaCompleta(http);
+            // Sincroniza texto do limite
+            limiteTexto = conta?.LimiteSaqueDiario.ToString("F2", new System.Globalization.CultureInfo("pt-BR")) ?? string.Empty;
+        }
+        catch (Exception ex)
+        {
+            erro = $"Erro ao carregar conta: {ex.Message}";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    // Em alguns retornos, Pessoa pode vir parcial. Busca dados completos.
+    private async Task GarantirPessoaCompleta(HttpClient http)
+    {
+        if (conta?.Pessoa == null) return;
+        // Se CPF estiver vazio, tenta buscar a pessoa por id
+        if (string.IsNullOrWhiteSpace(conta.Pessoa.Cpf))
+        {
+            try
+            {
+                var urlPessoa = $"http://localhost:5049/api/Pessoa/ObterPessoaPorId/{conta.Pessoa.IdPessoa}";
+                var jsonPessoa = await http.GetStringAsync(urlPessoa);
+                var pessoa = System.Text.Json.JsonSerializer.Deserialize<PessoaDto>(jsonPessoa, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (pessoa != null)
+                {
+                    conta.Pessoa = pessoa;
+                }
+            }
+            catch { }
+        }
+    }
+
+    // Valida e envia a atualização da conta para a API
+    private async Task Salvar()
+    {
+        if (conta == null) return;
+        try
+        {
+            salvando = true;
+            // Antes de salvar, garante valor com 2 casas
+            if (!TryParseMonetario(limiteTexto, out var limite))
+            {
+                Notificar("Informe um limite válido com até duas casas decimais.", true);
+                return;
+            }
+            conta.LimiteSaqueDiario = limite;
+            using var http = new HttpClient();
+            var url = "http://localhost:5049/api/Conta/AtualizarConta";
+            var payload = new
+            {
+                idConta = conta.IdConta,
+                pessoa = conta.Pessoa is not null ? new { idPessoa = conta.Pessoa.IdPessoa, nome = conta.Pessoa.Nome, cpf = conta.Pessoa.Cpf, dataNascimento = conta.Pessoa.DataNascimento.ToString("O") } : null,
+                limiteSaqueDiario = conta.LimiteSaqueDiario,
+                ativo = conta.Ativo,
+                tipoConta = conta.TipoConta
+            };
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+            var response = await http.PutAsync(url, content);
+            if (response.IsSuccessStatusCode)
+            {
+                Notificar("Conta atualizada com sucesso!", false);
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Notificar($"Falha ao salvar: {(int)response.StatusCode} - {body}", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Notificar($"Erro: {ex.Message}", true);
+        }
+        finally
+        {
+            salvando = false;
+        }
+    }
+
+    // Volta para a tela de consultas
+    private void Voltar()
+    {
+        Navigation.NavigateTo("/consultas");
+    }
+
+    // Serviço de navegação
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    // Utilitário de mensagens
+    private void Notificar(string texto, bool erro)
+    {
+        mensagem = texto;
+        mensagemClasse = erro ? "alert-danger" : "alert-success";
+    }
+
+    // Normaliza o texto do limite para no máximo duas casas decimais
+    private void OnLimiteAfter()
+    {
+        var texto = (limiteTexto ?? string.Empty).Trim();
+        // aceita vírgula ou ponto, mantém apenas dígitos e separador (primeiro)
+        texto = texto.Replace('.', ',');
+        var filtrado = new string(texto.Where(c => char.IsDigit(c) || c == ',').ToArray());
+        var primeiraVirgula = filtrado.IndexOf(',');
+        if (primeiraVirgula >= 0)
+        {
+            var parteInteira = filtrado.Substring(0, primeiraVirgula);
+            var parteDecimal = new string(filtrado.Substring(primeiraVirgula + 1).Where(char.IsDigit).ToArray());
+            if (parteDecimal.Length > 2) parteDecimal = parteDecimal.Substring(0, 2);
+            filtrado = parteInteira + "," + parteDecimal;
+        }
+        limiteTexto = filtrado;
+    }
+
+    // Formata com 2 casas ao sair do campo
+    private void OnLimiteBlur(FocusEventArgs _)
+    {
+        if (TryParseMonetario(limiteTexto, out var valor))
+        {
+            limiteTexto = valor.ToString("F2", new System.Globalization.CultureInfo("pt-BR"));
+        }
+    }
+
+    // Conversão robusta de string monetária para decimal
+    private static bool TryParseMonetario(string? texto, out decimal valor)
+    {
+        texto = (texto ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(texto)) { valor = 0m; return false; }
+        // tenta pt-BR, depois invariant com ponto
+        if (decimal.TryParse(texto, System.Globalization.NumberStyles.Number, new System.Globalization.CultureInfo("pt-BR"), out valor))
+        {
+            valor = Math.Round(valor, 2, MidpointRounding.AwayFromZero);
+            return true;
+        }
+        var alt = texto.Replace(',', '.');
+        if (decimal.TryParse(alt, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out valor))
+        {
+            valor = Math.Round(valor, 2, MidpointRounding.AwayFromZero);
+            return true;
+        }
+        return false;
+    }
+}
+
+
