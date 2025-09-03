@@ -1,5 +1,7 @@
 @page "/transacoes"
 
+<!-- Página para operações de transações: Depósito, Saque e Transferência -->
+
 <h3>Transações</h3>
 
 <div class="card p-3" style="max-width: 720px;">
@@ -58,8 +60,8 @@
 
     <div class="mb-3">
         <label class="form-label" for="valor">@LabelValor</label>
-        <input id="valor" class="form-control" type="text" placeholder="Ex.: 1,99" @bind="valorStr" @bind:event="oninput" />
-        <div class="form-text">Use vírgula para centavos (ex.: 1,99).</div>
+        <input id="valor" class="form-control" type="text" placeholder="Ex.: 1,99" @bind="valorStr" @bind:event="oninput" @bind:after="OnValorAfter" @onblur="OnValorBlur" />
+        <div class="form-text">Use vírgula para centavos (ex.: 1,99). Máx. 2 casas.</div>
     </div>
 
     <div class="d-flex gap-2">
@@ -74,6 +76,7 @@
 </div>
 
 @code {
+    // Opções e estado local da tela
     private string[] tipos = new[] { "Deposito", "Saque", "Transferencia" };
     private string tipoSelecionado = "Deposito";
 
@@ -92,9 +95,11 @@
     private string mensagem = string.Empty;
     private string mensagemClasse = "alert-info";
 
+    // DTOs mínimos para exibição
     public class PessoaDto { public int IdPessoa { get; set; } public string Nome { get; set; } = string.Empty; }
     public class ContaDto { public int IdConta { get; set; } public PessoaDto? Pessoa { get; set; } }
 
+    // Carrega contas disponíveis para busca
     protected override async Task OnInitializedAsync()
     {
         await CarregarContas();
@@ -118,6 +123,7 @@
         }
     }
 
+    // Quando muda o tipo, limpa valores/estado pertinentes
     private void OnTipoChanged()
     {
         valor = 0m;
@@ -129,6 +135,7 @@
         }
     }
 
+    // Controle de exibição de sugestões
     private void MostrarSugestoes(bool origem)
     {
         if (origem) mostrarSugestoesOrigem = true; else mostrarSugestoesDestino = true;
@@ -142,6 +149,7 @@
         StateHasChanged();
     }
 
+    // Atualiza sugestões conforme o texto digitado
     private void AtualizarSugestoes(bool origem)
     {
         var termo = (origem ? buscaOrigem : buscaDestino) ?? string.Empty;
@@ -152,6 +160,7 @@
         if (origem) sugestoesOrigem = lista; else sugestoesDestino = lista;
     }
 
+    // Seleciona uma conta da lista de sugestões
     private void SelecionarConta(bool origem, ContaDto c)
     {
         if (origem)
@@ -168,6 +177,7 @@
         }
     }
 
+    // Executa a transação na API
     private async Task Executar()
     {
         if (executando) return;
@@ -215,6 +225,7 @@
         }
     }
 
+    // Limpa formulário
     private void Limpar()
     {
         contaOrigem = null;
@@ -225,6 +236,7 @@
         mensagem = string.Empty;
     }
 
+    // Limpa apenas campos de valor e destino
     private void LimparValores()
     {
         valor = 0m;
@@ -236,6 +248,7 @@
         }
     }
 
+    // Valida conta(s) e valor digitado
     private bool Validar()
     {
         if (contaOrigem == null)
@@ -244,19 +257,10 @@
             return false;
         }
         // Converter valorStr aceitando vírgula (pt-BR) ou ponto
-        var styles = System.Globalization.NumberStyles.Number;
-        var pt = new System.Globalization.CultureInfo("pt-BR");
-        var inv = System.Globalization.CultureInfo.InvariantCulture;
-        var texto = (valorStr ?? string.Empty).Trim();
-        if (!decimal.TryParse(texto, styles, pt, out valor))
+        if (!TryParseMonetario(valorStr, out valor))
         {
-            // fallback: troca vírgula por ponto e tenta invariant
-            var alt = texto.Replace(',', '.');
-            if (!decimal.TryParse(alt, styles, inv, out valor))
-            {
-                Notificar("Valor inválido. Ex.: 1,99", true);
-                return false;
-            }
+            Notificar("Valor inválido. Ex.: 1,99", true);
+            return false;
         }
         if (valor <= 0)
         {
@@ -276,6 +280,7 @@
         return true;
     }
 
+    // Label amigável conforme tipo
     private string LabelValor => tipoSelecionado switch
     {
         "Deposito" => "Valor do Depósito",
@@ -283,10 +288,56 @@
         _ => "Valor da Transferência"
     };
 
+    // Utilitário de mensagens
     private void Notificar(string texto, bool erro)
     {
         mensagem = texto;
         mensagemClasse = erro ? "alert-danger" : "alert-success";
+    }
+
+    // Normaliza entrada de valor para no máximo duas casas decimais
+    private void OnValorAfter()
+    {
+        var texto = (valorStr ?? string.Empty).Trim();
+        texto = texto.Replace('.', ',');
+        var filtrado = new string(texto.Where(c => char.IsDigit(c) || c == ',').ToArray());
+        var primeiraVirgula = filtrado.IndexOf(',');
+        if (primeiraVirgula >= 0)
+        {
+            var parteInteira = filtrado.Substring(0, primeiraVirgula);
+            var parteDecimal = new string(filtrado.Substring(primeiraVirgula + 1).Where(char.IsDigit).ToArray());
+            if (parteDecimal.Length > 2) parteDecimal = parteDecimal.Substring(0, 2);
+            filtrado = parteInteira + "," + parteDecimal;
+        }
+        valorStr = filtrado;
+    }
+
+    // Formata com 2 casas ao sair do campo
+    private void OnValorBlur(FocusEventArgs _)
+    {
+        if (TryParseMonetario(valorStr, out var v))
+        {
+            valorStr = v.ToString("F2", new System.Globalization.CultureInfo("pt-BR"));
+        }
+    }
+
+    // Conversão robusta de string monetária para decimal
+    private static bool TryParseMonetario(string? texto, out decimal valor)
+    {
+        texto = (texto ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(texto)) { valor = 0m; return false; }
+        if (decimal.TryParse(texto, System.Globalization.NumberStyles.Number, new System.Globalization.CultureInfo("pt-BR"), out valor))
+        {
+            valor = Math.Round(valor, 2, MidpointRounding.AwayFromZero);
+            return true;
+        }
+        var alt = texto.Replace(',', '.');
+        if (decimal.TryParse(alt, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out valor))
+        {
+            valor = Math.Round(valor, 2, MidpointRounding.AwayFromZero);
+            return true;
+        }
+        return false;
     }
 }
 

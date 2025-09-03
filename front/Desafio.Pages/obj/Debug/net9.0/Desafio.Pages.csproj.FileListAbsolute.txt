@@ -1074,10 +1074,10 @@ C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\Des
 C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\refint\Desafio.Pages.dll
 C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\Desafio.Pages.pdb
 C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\ref\Desafio.Pages.dll
-C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\bin\Debug\net9.0\wwwroot\_framework\Desafio.Pages.pd0hc81fxw.wasm
-C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\bin\Debug\net9.0\wwwroot\_framework\Desafio.Pages.at61ferpwt.pdb
-C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\bin\Debug\net9.0\wwwroot\_framework\Desafio.Pages.pd0hc81fxw.wasm.gz
-C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\bin\Debug\net9.0\wwwroot\_framework\Desafio.Pages.at61ferpwt.pdb.gz
-C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\compressed\ws9ypewf7e-pd0hc81fxw.gz
-C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\compressed\zg9b2305zl-at61ferpwt.gz
-C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\compressed\hq75jnanvo-4crrr3pnwu.gz
+C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\bin\Debug\net9.0\wwwroot\_framework\Desafio.Pages.7gl4pd1xy9.wasm
+C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\bin\Debug\net9.0\wwwroot\_framework\Desafio.Pages.4dox79983q.pdb
+C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\bin\Debug\net9.0\wwwroot\_framework\Desafio.Pages.7gl4pd1xy9.wasm.gz
+C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\bin\Debug\net9.0\wwwroot\_framework\Desafio.Pages.4dox79983q.pdb.gz
+C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\compressed\ws9ypewf7e-7gl4pd1xy9.gz
+C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\compressed\zg9b2305zl-4dox79983q.gz
+C:\Users\mateu\Desktop\Codas\desafioAPI\front\Desafio.Pages\obj\Debug\net9.0\compressed\hq75jnanvo-skjxxatecc.gz

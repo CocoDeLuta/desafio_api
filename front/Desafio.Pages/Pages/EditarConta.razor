@@ -1,5 +1,7 @@
 @page "/editar-conta/{id:int}"
 
+<!-- Página para editar dados de uma conta (limite, tipo, ativo) -->
+
 <h3>Editar Conta</h3>
 
 @if (carregando)
@@ -27,7 +29,8 @@ else
         </div>
         <div class="mb-3">
             <label class="form-label" for="limite">Limite de saque diário</label>
-            <input id="limite" class="form-control" type="number" step="0.01" min="0" @bind="conta.LimiteSaqueDiario" />
+            <input id="limite" class="form-control" type="text" @bind="limiteTexto" @bind:event="oninput" @bind:after="OnLimiteAfter" @onblur="OnLimiteBlur" />
+            <div class="form-text">Informe com duas casas decimais. Ex.: 100,50</div>
         </div>
         <div class="mb-3">
             <label class="form-label" for="tipo">Tipo da conta</label>
@@ -56,8 +59,10 @@ else
 }
 
 @code {
+    // Parâmetro de rota
     [Parameter] public int id { get; set; }
 
+    // Estado local
     private ContaDto? conta;
     private bool carregando = true;
     private bool salvando = false;
@@ -65,7 +70,9 @@ else
     private string mensagem = string.Empty;
     private string mensagemClasse = "alert-info";
     private string[] tiposConta = new[] { "Corrente", "Poupanca", "Salario" };
+    private string limiteTexto = string.Empty;
 
+    // DTOs simples usados na tela
     public class PessoaDto
     {
         public int IdPessoa { get; set; }
@@ -83,11 +90,13 @@ else
         public DateTime DataCriacao { get; set; }
     }
 
+    // Carrega a conta ao receber/mudar o id
     protected override async Task OnParametersSetAsync()
     {
         await Carregar();
     }
 
+    // Busca a conta na API e sincroniza o campo de limite como texto
     private async Task Carregar()
     {
         try
@@ -99,6 +108,8 @@ else
             var resp = System.Text.Json.JsonSerializer.Deserialize<ContaDto>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             conta = resp;
             await GarantirPessoaCompleta(http);
+            // Sincroniza texto do limite
+            limiteTexto = conta?.LimiteSaqueDiario.ToString("F2", new System.Globalization.CultureInfo("pt-BR")) ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -110,6 +121,7 @@ else
         }
     }
 
+    // Em alguns retornos, Pessoa pode vir parcial. Busca dados completos.
     private async Task GarantirPessoaCompleta(HttpClient http)
     {
         if (conta?.Pessoa == null) return;
@@ -130,12 +142,20 @@ else
         }
     }
 
+    // Valida e envia a atualização da conta para a API
     private async Task Salvar()
     {
         if (conta == null) return;
         try
         {
             salvando = true;
+            // Antes de salvar, garante valor com 2 casas
+            if (!TryParseMonetario(limiteTexto, out var limite))
+            {
+                Notificar("Informe um limite válido com até duas casas decimais.", true);
+                return;
+            }
+            conta.LimiteSaqueDiario = limite;
             using var http = new HttpClient();
             var url = "http://localhost:5049/api/Conta/AtualizarConta";
             var payload = new
@@ -168,17 +188,67 @@ else
         }
     }
 
+    // Volta para a tela de consultas
     private void Voltar()
     {
         Navigation.NavigateTo("/consultas");
     }
 
+    // Serviço de navegação
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
+    // Utilitário de mensagens
     private void Notificar(string texto, bool erro)
     {
         mensagem = texto;
         mensagemClasse = erro ? "alert-danger" : "alert-success";
+    }
+
+    // Normaliza o texto do limite para no máximo duas casas decimais
+    private void OnLimiteAfter()
+    {
+        var texto = (limiteTexto ?? string.Empty).Trim();
+        // aceita vírgula ou ponto, mantém apenas dígitos e separador (primeiro)
+        texto = texto.Replace('.', ',');
+        var filtrado = new string(texto.Where(c => char.IsDigit(c) || c == ',').ToArray());
+        var primeiraVirgula = filtrado.IndexOf(',');
+        if (primeiraVirgula >= 0)
+        {
+            var parteInteira = filtrado.Substring(0, primeiraVirgula);
+            var parteDecimal = new string(filtrado.Substring(primeiraVirgula + 1).Where(char.IsDigit).ToArray());
+            if (parteDecimal.Length > 2) parteDecimal = parteDecimal.Substring(0, 2);
+            filtrado = parteInteira + "," + parteDecimal;
+        }
+        limiteTexto = filtrado;
+    }
+
+    // Formata com 2 casas ao sair do campo
+    private void OnLimiteBlur(FocusEventArgs _)
+    {
+        if (TryParseMonetario(limiteTexto, out var valor))
+        {
+            limiteTexto = valor.ToString("F2", new System.Globalization.CultureInfo("pt-BR"));
+        }
+    }
+
+    // Conversão robusta de string monetária para decimal
+    private static bool TryParseMonetario(string? texto, out decimal valor)
+    {
+        texto = (texto ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(texto)) { valor = 0m; return false; }
+        // tenta pt-BR, depois invariant com ponto
+        if (decimal.TryParse(texto, System.Globalization.NumberStyles.Number, new System.Globalization.CultureInfo("pt-BR"), out valor))
+        {
+            valor = Math.Round(valor, 2, MidpointRounding.AwayFromZero);
+            return true;
+        }
+        var alt = texto.Replace(',', '.');
+        if (decimal.TryParse(alt, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out valor))
+        {
+            valor = Math.Round(valor, 2, MidpointRounding.AwayFromZero);
+            return true;
+        }
+        return false;
     }
 }
 

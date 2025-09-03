@@ -1,5 +1,7 @@
 @page "/cadastrar-pessoa"
 
+<!-- Página para cadastrar uma nova pessoa -->
+
 <h3>Cadastrar Pessoa</h3>
 
 <div class="card p-3" style="max-width: 520px;">
@@ -9,7 +11,8 @@
     </div>
     <div class="mb-3">
         <label class="form-label" for="cpf">CPF</label>
-        <input id="cpf" class="form-control" @bind="pessoa.Cpf" placeholder="Somente números" />
+        <input id="cpf" class="form-control" @bind="pessoa.Cpf" @bind:event="oninput" @bind:after="OnCpfAfter" placeholder="Somente números" inputmode="numeric" />
+        <div class="form-text">Somente números. Deve conter 11 dígitos.</div>
     </div>
     <div class="mb-3">
         <label class="form-label" for="dataNasc">Data de Nascimento</label>
@@ -28,12 +31,14 @@
 </div>
 
 @code {
+    // Estado local do formulário
     private PessoaDto pessoa = new();
     private bool isSubmitting = false;
     private string mensagem = string.Empty;
     private string mensagemClasse = "alert-info";
     private readonly string maxDate = DateTime.Today.ToString("yyyy-MM-dd");
 
+    // Modelo usado para trafegar com a API
     public class PessoaDto
     {
         public int IdPessoa { get; set; }
@@ -42,6 +47,7 @@
         public DateTime? DataNascimento { get; set; }
     }
 
+    // Limpa o formulário
     private void Limpar()
     {
         pessoa = new PessoaDto();
@@ -49,10 +55,13 @@
         mensagem = string.Empty;
     }
 
+    // Regras básicas de validação (nome/CPF/data)
     private bool Validar()
     {
         if (string.IsNullOrWhiteSpace(pessoa.Nome)) { Notificar("Informe o nome.", true); return false; }
+        pessoa.Cpf = SanitizeCpf(pessoa.Cpf);
         if (string.IsNullOrWhiteSpace(pessoa.Cpf)) { Notificar("Informe o CPF.", true); return false; }
+        if (pessoa.Cpf.Length != 11) { Notificar("CPF inválido. Deve conter 11 dígitos.", true); return false; }
         if (!pessoa.DataNascimento.HasValue) { Notificar("Informe a data de nascimento.", true); return false; }
         if (pessoa.DataNascimento.Value < new DateTime(1900, 1, 1) || pessoa.DataNascimento.Value > DateTime.Today)
         {
@@ -62,12 +71,14 @@
         return true;
     }
 
+    // Exibe mensagens para o usuário
     private void Notificar(string texto, bool erro)
     {
         mensagem = texto;
         mensagemClasse = erro ? "alert-danger" : "alert-success";
     }
 
+    // Envia o cadastro para a API
     private async Task Cadastrar()
     {
         if (isSubmitting) return;
@@ -110,6 +121,20 @@
         {
             isSubmitting = false;
         }
+    }
+
+    // Sanitiza CPF após atualização do binding
+    private void OnCpfAfter()
+    {
+        pessoa.Cpf = SanitizeCpf(pessoa.Cpf);
+    }
+
+    // Mantém apenas números e limita a 11 dígitos
+    private static string SanitizeCpf(string? cpf)
+    {
+        var digits = new string((cpf ?? string.Empty).Where(char.IsDigit).ToArray());
+        if (digits.Length > 11) digits = digits.Substring(0, 11);
+        return digits;
     }
 }
 

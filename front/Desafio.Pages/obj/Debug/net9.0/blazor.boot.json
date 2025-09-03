@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Desafio.Pages",
   "resources": {
-    "hash": "sha256-0n0tM7sIH2SmPUUjGT0rZ/thu6o6PaDUKTKb8gb+CPw=",
+    "hash": "sha256-OVl+UHPqV147TnNrsrpHVjixMX721uucA9+gqfA4z5Q=",
     "fingerprinting": {
       "Microsoft.AspNetCore.Authorization.da83xzpz5r.wasm": "Microsoft.AspNetCore.Authorization.wasm",
       "Microsoft.AspNetCore.Components.vmzb2angnn.wasm": "Microsoft.AspNetCore.Components.wasm",
@@ -201,8 +201,8 @@
       "icudt_CJK.tjcz0u77k5.dat": "icudt_CJK.dat",
       "icudt_EFIGS.tptq2av103.dat": "icudt_EFIGS.dat",
       "icudt_no_CJK.lfu7j35m59.dat": "icudt_no_CJK.dat",
-      "Desafio.Pages.pd0hc81fxw.wasm": "Desafio.Pages.wasm",
-      "Desafio.Pages.at61ferpwt.pdb": "Desafio.Pages.pdb"
+      "Desafio.Pages.7gl4pd1xy9.wasm": "Desafio.Pages.wasm",
+      "Desafio.Pages.4dox79983q.pdb": "Desafio.Pages.pdb"
     },
     "jsModuleNative": {
       "dotnet.native.50iqa8w3ys.js": "sha256-pQdXuxfVeqYHOwd5HUM2ERd7OnXirj9JTF37b6OdTAc="
@@ -412,10 +412,10 @@
       "WindowsBase.361km0836k.wasm": "sha256-FacUCEIJYTnbOWgX/R9QP2QnurqRZwRIkDAH0N9z69s=",
       "mscorlib.qiu3j3msqk.wasm": "sha256-QvztpxTOEw4aMIl7zP3QtsPLNv/IWaK5wq22J4ReGrA=",
       "netstandard.lp03u0xxi4.wasm": "sha256-WVQsxULiAiEbyXLKolS7txnWVT82SsvsuMe4jJ+SqqI=",
-      "Desafio.Pages.pd0hc81fxw.wasm": "sha256-LZg6J34dGapoJySTN50gXcM1rxHWZm7rpESeAArYRUc="
+      "Desafio.Pages.7gl4pd1xy9.wasm": "sha256-aV0G1CHdwFK1y1wXKikbqFb2RGGUMwwZOttRkvjKTFY="
     },
     "pdb": {
-      "Desafio.Pages.at61ferpwt.pdb": "sha256-vi/VJpnt6u5DBxrfLx/pgjBte4AZwhj+QaAbNNXvFBQ="
+      "Desafio.Pages.4dox79983q.pdb": "sha256-mLSvE5pl73pcTZNsxoc5sUOoSm+zcTqHoleInI5ZZ3Q="
     }
   },
   "cacheBootResources": true,

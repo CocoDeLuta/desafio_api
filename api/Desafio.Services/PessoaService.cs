@@ -30,4 +30,9 @@ public class PessoaService
         await _context.SaveChangesAsync();
         return pessoa;
     }
+
+    public async Task SalvarAlteracoes()
+    {
+        await _context.SaveChangesAsync();
+    }
 }

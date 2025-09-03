@@ -1,5 +1,7 @@
 ﻿@page "/consultas"
 
+<!-- Tela de consultas gerais: contas, transações e pessoas -->
+
 <PageTitle>Consultas</PageTitle>
 
 <link href="Consultas.css" rel="stylesheet" />
@@ -55,20 +57,20 @@
                             @foreach (var col in colunas)
                             {
                                                                  <td>
-                                     @{
-                                         var valor = item.ContainsKey(col) ? item[col] : "";
-                                         if (col == "ativo")
-                                         {
-                                             <span class="@(valor.ToString() == "True" ? "status-active" : "status-inactive")">
-                                                 @(valor.ToString() == "True" ? "Ativo" : "Inativo")
-                                             </span>
-                                         }
-                                         else
-                                         {
-                                             @valor
-                                         }
-                                     }
-                                 </td>
+                                    @{
+                                        var valor = item.ContainsKey(col) ? item[col] : "";
+                                        if (col == "ativo")
+                                        {
+                                            <span class="@(valor.ToString() == "True" ? "status-active" : "status-inactive")">
+                                                @(valor.ToString() == "True" ? "Ativo" : "Inativo")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            @valor
+                                        }
+                                    }
+                                </td>
                             }
                             @if (opcaoSelecionada == "contas" || opcaoSelecionada == "pessoas")
                             {
@@ -91,6 +93,7 @@
 </div>
 
 @code {
+    // Navegação e estado base
     [Inject] private NavigationManager Nav { get; set; } = default!;
     private string opcaoSelecionada = "contas";
     private List<Dictionary<string, object>>? dados = null;
@@ -129,6 +132,7 @@
         public DateTime DataTransacao { get; set; }
     }
 
+    // Busca os dados conforme a opção selecionada
     private async Task BuscarDados()
     {
         string url = "";
@@ -308,6 +312,7 @@
         }
     }
 
+    // Aplica pesquisa textual básica
     private void AplicarFiltro()
     {
         if (dados == null)
@@ -350,6 +355,7 @@
         AplicarOrdenacao();
     }
 
+    // Ordena por coluna clicada (toggle asc/desc)
     private void OrdenarPor(string coluna)
     {
         if (ordenacaoColuna == coluna)
@@ -364,6 +370,7 @@
         AplicarOrdenacao();
     }
 
+    // Ordenação genérica por valor (número, data, string)
     private void AplicarOrdenacao()
     {
         if (dadosFiltrados == null || string.IsNullOrEmpty(ordenacaoColuna)) return;
@@ -407,11 +414,13 @@
         _ => "Pesquisar"
     };
 
+    // Reaplica filtro quando parâmetros mudam
     protected override void OnParametersSet()
     {
         AplicarFiltro();
     }
 
+    // Botão de editar por linha, navega para tela de edição
     private void Editar(Dictionary<string, object> item)
     {
         if (opcaoSelecionada == "contas")
@@ -428,10 +437,23 @@
                 }
             }
         }
-        // Pessoas manteremos placeholder por enquanto
+        else if (opcaoSelecionada == "pessoas")
+        {
+            var chaveId = item.Keys.FirstOrDefault(k => string.Equals(k, "idPessoa", StringComparison.OrdinalIgnoreCase));
+            if (chaveId != null)
+            {
+                var idStr = item[chaveId]?.ToString();
+                if (int.TryParse(idStr, out var id))
+                {
+                    Nav.NavigateTo($"/editar-pessoa/{id}");
+                    return;
+                }
+            }
+        }
         Console.WriteLine($"Editar: {System.Text.Json.JsonSerializer.Serialize(item)}");
     }
 
+    // Quando muda o select, recarrega os dados
     protected override async Task OnInitializedAsync()
     {
         await BuscarDados();
@@ -448,6 +470,7 @@
         return Task.CompletedTask;
     }
 
+    // Conversores (não utilizados diretamente hoje, mantidos como utilitário)
     private List<Dictionary<string, object>> ConverterContasParaDicionario(List<ContaApiModel>? contas)
     {
         var resultado = new List<Dictionary<string, object>>();
