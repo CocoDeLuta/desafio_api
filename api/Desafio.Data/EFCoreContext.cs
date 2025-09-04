@@ -18,14 +18,6 @@ public class EFCoreContext : DbContext
 
     }
 
-    // Descomentar para migrações sem injeção de dependência
-    // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    // {
-    //     if (!optionsBuilder.IsConfigured)
-    //     {
-    //         optionsBuilder.UseSqlServer("Server=localhost;Database=DesafioDB;Trusted_Connection=True;TrustServerCertificate=True;"); 
-    //     }
-    // }
 
     // Adicionar DbSets para as entidades
     public DbSet<ContaModel> Contas { get; set; }

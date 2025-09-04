@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\front\\Desafio.Pages\\Desafio.Pages.csproj": {}
+    "C:\\Users\\mateu\\Documents\\Codas\\desafio_api\\front\\Desafio.Pages\\Desafio.Pages.csproj": {}
   },
   "projects": {
-    "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\front\\Desafio.Pages\\Desafio.Pages.csproj": {
+    "C:\\Users\\mateu\\Documents\\Codas\\desafio_api\\front\\Desafio.Pages\\Desafio.Pages.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\front\\Desafio.Pages\\Desafio.Pages.csproj",
+        "projectUniqueName": "C:\\Users\\mateu\\Documents\\Codas\\desafio_api\\front\\Desafio.Pages\\Desafio.Pages.csproj",
         "projectName": "Desafio.Pages",
-        "projectPath": "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\front\\Desafio.Pages\\Desafio.Pages.csproj",
+        "projectPath": "C:\\Users\\mateu\\Documents\\Codas\\desafio_api\\front\\Desafio.Pages\\Desafio.Pages.csproj",
         "packagesPath": "C:\\Users\\mateu\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\mateu\\Desktop\\Codas\\desafioAPI\\front\\Desafio.Pages\\obj\\",
+        "outputPath": "C:\\Users\\mateu\\Documents\\Codas\\desafio_api\\front\\Desafio.Pages\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "E:\\Visual Studio Community\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
           "C:\\Users\\mateu\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -40,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net9.0": {
@@ -58,13 +62,13 @@
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.8, )",
+              "version": "[9.0.3, )",
               "autoReferenced": true
             },
             "Microsoft.NET.Sdk.WebAssembly.Pack": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.8, )",
+              "version": "[9.0.3, )",
               "autoReferenced": true
             }
           },
@@ -82,7 +86,7 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
-              "version": "[9.0.8, 9.0.8]"
+              "version": "[9.0.3, 9.0.3]"
             }
           ],
           "frameworkReferences": {
@@ -90,7 +94,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {

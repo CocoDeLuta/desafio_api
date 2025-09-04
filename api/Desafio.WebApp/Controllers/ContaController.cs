@@ -14,7 +14,6 @@ public class ContaController : ControllerBase
 
     public ContaController(ContaService contaService)
     {
-
         _contaService = contaService;
     }
 
@@ -28,11 +27,6 @@ public class ContaController : ControllerBase
     [HttpPost("InserirConta")]
     public async Task<IActionResult> InserirConta([FromBody] ContaModel conta)
     {
-        if (conta == null)
-        {
-            return BadRequest();
-        }
-
         await _contaService.InserirConta(conta);
         return CreatedAtAction(nameof(ObterTodasContas), new { id = conta.IdConta }, conta);
     }
@@ -41,21 +35,12 @@ public class ContaController : ControllerBase
     public async Task<IActionResult> ObterContaPorId(int id)
     {
         var conta = await _contaService.ObterContaPorId(id);
-        if (conta == null)
-        {
-            return NotFound();
-        }
         return Ok(conta);
     }
 
     [HttpPut("AtualizarConta")]
     public async Task<IActionResult> AtualizarConta([FromBody] ContaModel conta)
     {
-        if (conta == null)
-        {
-            return BadRequest();
-        }
-
         await _contaService.AtualizarConta(conta);
         return NoContent();
     }

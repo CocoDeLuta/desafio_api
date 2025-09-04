@@ -14,7 +14,6 @@ public class PessoaController : ControllerBase
 
     public PessoaController(PessoaService pessoaService)
     {
-
         _pessoaService = pessoaService;
     }
 
@@ -29,10 +28,6 @@ public class PessoaController : ControllerBase
     public async Task<IActionResult> ObterPessoaPorId(int id)
     {
         var pessoa = await _pessoaService.ObterPessoaPorId(id);
-        if (pessoa == null)
-        {
-            return NotFound();
-        }
         return Ok(pessoa);
     }
 
@@ -46,18 +41,8 @@ public class PessoaController : ControllerBase
     [HttpPut("AtualizarPessoa")]
     public async Task<IActionResult> AtualizarPessoa([FromBody] PessoaModel pessoa)
     {
-        var existente = await _pessoaService.ObterPessoaPorId(pessoa.IdPessoa);
-        if (existente == null)
-        {
-            return NotFound();
-        }
-
-        existente.Nome = pessoa.Nome;
-        existente.Cpf = pessoa.Cpf;
-        existente.DataNascimento = pessoa.DataNascimento;
-
-        await _pessoaService.SalvarAlteracoes();
-        return Ok(existente);
+        await _pessoaService.AtualizarPessoa(pessoa);
+        return NoContent();
     }
 
 }

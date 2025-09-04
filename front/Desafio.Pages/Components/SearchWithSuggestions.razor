@@ -1,0 +1,88 @@
+@using Desafio.Pages.Models
+@typeparam TItem where TItem : class
+
+<div class="mb-3 position-relative">
+    <label class="form-label" for="@Id">@Label</label>
+    <input id="@Id" class="form-control" placeholder="@Placeholder" @bind="SearchText" @bind:event="oninput" @onfocus="ShowSuggestions" @onblur="HideSuggestionsWithDelay" />
+    
+    @if (ShowSuggestionsList && Suggestions.Count > 0)
+    {
+        <div class="list-group position-absolute w-100 shadow" style="z-index: 1000; max-height: 240px; overflow-y: auto;">
+            @foreach (var item in Suggestions)
+            {
+                <button type="button" class="list-group-item list-group-item-action" @onmousedown="(() => SelectItem(item))">
+                    @GetItemDisplayText(item)
+                </button>
+            }
+        </div>
+    }
+    
+    @if (SelectedItem is not null)
+    {
+        <div class="form-text">Selecionado: <strong>@GetItemDisplayText(SelectedItem)</strong></div>
+    }
+</div>
+
+@code {
+    [Parameter] public string SearchText { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SearchTextChanged { get; set; }
+    [Parameter] public TItem? SelectedItem { get; set; }
+    [Parameter] public EventCallback<TItem?> SelectedItemChanged { get; set; }
+    [Parameter] public List<TItem> Items { get; set; } = new();
+    [Parameter] public string Label { get; set; } = "Buscar";
+    [Parameter] public string Placeholder { get; set; } = "Digite para buscar";
+    [Parameter] public string Id { get; set; } = "search";
+    [Parameter] public Func<TItem, string> GetDisplayText { get; set; } = item => item?.ToString() ?? "";
+    [Parameter] public Func<TItem, string> GetSearchText { get; set; } = item => item?.ToString() ?? "";
+    [Parameter] public int MaxSuggestions { get; set; } = 8;
+
+    private List<TItem> Suggestions { get; set; } = new();
+    private bool ShowSuggestionsList { get; set; } = false;
+
+    protected override void OnParametersSet()
+    {
+        UpdateSuggestions();
+    }
+
+    private void ShowSuggestions()
+    {
+        ShowSuggestionsList = true;
+        UpdateSuggestions();
+    }
+
+    private async Task HideSuggestionsWithDelay()
+    {
+        await Task.Delay(150);
+        ShowSuggestionsList = false;
+        StateHasChanged();
+    }
+
+    private void UpdateSuggestions()
+    {
+        var termo = (SearchText ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(termo))
+        {
+            Suggestions = Items.Take(MaxSuggestions).ToList();
+            return;
+        }
+
+        Suggestions = Items
+            .Where(item => GetSearchText(item).Contains(termo, StringComparison.OrdinalIgnoreCase))
+            .Take(MaxSuggestions)
+            .ToList();
+    }
+
+    private async Task SelectItem(TItem item)
+    {
+        SelectedItem = item;
+        SearchText = GetDisplayText(item);
+        ShowSuggestionsList = false;
+        await SelectedItemChanged.InvokeAsync(SelectedItem);
+        await SearchTextChanged.InvokeAsync(SearchText);
+    }
+
+    private string GetItemDisplayText(TItem item)
+    {
+        return GetDisplayText(item);
+    }
+}

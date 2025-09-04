@@ -1,0 +1,26 @@
+@using Desafio.Pages.Services
+
+<div class="mb-3">
+    <label class="form-label" for="@Id">@Label</label>
+    <input id="@Id" class="form-control" @bind="Value" @bind:event="oninput" @bind:after="OnCpfAfter" placeholder="@Placeholder" inputmode="numeric" />
+    <div class="form-text">@HelpText</div>
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Label { get; set; } = "CPF";
+    [Parameter] public string Placeholder { get; set; } = "Somente números";
+    [Parameter] public string HelpText { get; set; } = "Somente números. Deve conter 11 dígitos.";
+    [Parameter] public string Id { get; set; } = "cpf";
+
+    private async Task OnCpfAfter()
+    {
+        var sanitized = ValidationService.SanitizeCpf(Value);
+        if (sanitized != Value)
+        {
+            Value = sanitized;
+            await ValueChanged.InvokeAsync(Value);
+        }
+    }
+}

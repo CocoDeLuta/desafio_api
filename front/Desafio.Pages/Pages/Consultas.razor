@@ -1,4 +1,6 @@
 ﻿@page "/consultas"
+@inject ApiService ApiService
+@inject MessageService MessageService
 
 <!-- Tela de consultas gerais: contas, transações e pessoas -->
 
@@ -90,6 +92,8 @@
             <p>Nenhum dado encontrado.</p>
         </div>
     }
+
+    <MessageAlert Message="@MessageService.Message" MessageClass="@MessageService.MessageClass" />
 </div>
 
 @code {
@@ -103,209 +107,50 @@
     private string? ordenacaoColuna = null;
     private bool ordenacaoAsc = true;
 
-    // Classes para deserialização
-    public class PessoaApiModel
-    {
-        public int IdPessoa { get; set; }
-        public string Nome { get; set; } = string.Empty;
-        public string Cpf { get; set; } = string.Empty;
-        public DateTime DataNascimento { get; set; }
-    }
-
-    public class ContaApiModel
-    {
-        public int IdConta { get; set; }
-        public PessoaApiModel Pessoa { get; set; } = new();
-        public decimal Saldo { get; set; }
-        public decimal LimiteSaqueDiario { get; set; }
-        public bool Ativo { get; set; }
-        public string TipoConta { get; set; } = string.Empty;
-        public DateTime DataCriacao { get; set; }
-    }
-
-    public class TransacaoApiModel
-    {
-        public int IdTransacao { get; set; }
-        public ContaApiModel Conta { get; set; } = new();
-        public decimal Valor { get; set; }
-        public string TipoTransacao { get; set; } = string.Empty;
-        public DateTime DataTransacao { get; set; }
-    }
 
     // Busca os dados conforme a opção selecionada
     private async Task BuscarDados()
     {
-        string url = "";
-
-        switch (opcaoSelecionada)
+        try
         {
-            case "contas":
-                url = "http://localhost:5049/api/Conta/ObterTodasContas";
-                break;
-            case "transacoes":
-                url = "http://localhost:5049/api/Transacao/ObterTodasTransacoes";
-                break;
-            case "pessoas":
-                url = "http://localhost:5049/api/Pessoa/ObterTodasPessoas";
-                break;
-            default:
-                url = "http://localhost:5049/api/Conta/ObterTodasContas";
-                break;
-        }
+            string endpoint = opcaoSelecionada switch
+            {
+                "contas" => "/api/Conta/ObterTodasContas",
+                "transacoes" => "/api/Transacao/ObterTodasTransacoes",
+                "pessoas" => "/api/Pessoa/ObterTodasPessoas",
+                _ => "/api/Conta/ObterTodasContas"
+            };
 
-        using var http = new HttpClient();
-        var response = await http.GetAsync(url);
-
-        if (response.IsSuccessStatusCode)
-        {
-            var json = await response.Content.ReadAsStringAsync();
-            var resultado = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, object>>>(json);
+            var resultado = await ApiService.GetAsync<List<Dictionary<string, object>>>(endpoint);
             dados = resultado ?? new List<Dictionary<string, object>>();
 
             colunas = (dados.Count > 0) ? dados[0].Keys.ToList() : new List<string>();
 
-            if (opcaoSelecionada == "contas" && dados.Count > 0)
+            // Formatar dados conforme o tipo
+            if (dados.Count > 0)
             {
                 foreach (var item in dados)
                 {
-                    if (item.ContainsKey("pessoa") && item["pessoa"] is not null)
+                    switch (opcaoSelecionada)
                     {
-                        try
-                        {
-                            var pessoaElement = (System.Text.Json.JsonElement)item["pessoa"];
-                            if (pessoaElement.TryGetProperty("nome", out var nomeElement))
-                            {
-                                item["pessoa"] = nomeElement.GetString() ?? "Nome não encontrado";
-                            }
-                            else
-                            {
-                                item["pessoa"] = "Nome não encontrado";
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Erro ao processar Pessoa: {ex.Message}");
-                            item["pessoa"] = "Erro ao processar";
-                        }
-                    }
-                    
-                    // Formatar saldo e limite (tratando cultura e JsonElement numérico)
-                    if (item.ContainsKey("saldo"))
-                    {
-                        try
-                        {
-                            if (item["saldo"] is System.Text.Json.JsonElement saldoEl && saldoEl.ValueKind == System.Text.Json.JsonValueKind.Number)
-                            {
-                                var saldo = saldoEl.GetDecimal();
-                                item["saldo"] = saldo.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
-                            }
-                            else if (decimal.TryParse(item["saldo"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var saldo))
-                            {
-                                item["saldo"] = saldo.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
-                            }
-                        }
-                        catch { }
-                    }
-                    
-                    if (item.ContainsKey("limiteSaqueDiario"))
-                    {
-                        try
-                        {
-                            if (item["limiteSaqueDiario"] is System.Text.Json.JsonElement limiteEl && limiteEl.ValueKind == System.Text.Json.JsonValueKind.Number)
-                            {
-                                var limite = limiteEl.GetDecimal();
-                                item["limiteSaqueDiario"] = limite.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
-                            }
-                            else if (decimal.TryParse(item["limiteSaqueDiario"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var limite))
-                            {
-                                item["limiteSaqueDiario"] = limite.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
-                            }
-                        }
-                        catch { }
-                    }
-                    
-                    // Formatar data de criação
-                    if (item.ContainsKey("dataCriacao"))
-                    {
-                        if (DateTime.TryParse(item["dataCriacao"].ToString(), out var data))
-                        {
-                            item["dataCriacao"] = data.ToString("dd/MM/yyyy");
-                        }
-                    }
-                }
-            }
-            else if (opcaoSelecionada == "transacoes" && dados.Count > 0)
-            {
-                foreach (var item in dados)
-                {
-                    if (item.ContainsKey("conta") && item["conta"] is not null)
-                    {
-                        try
-                        {
-                            var contaElement = (System.Text.Json.JsonElement)item["conta"];
-                            if (contaElement.TryGetProperty("idConta", out var idContaElement))
-                            {
-                                item["conta"] = idContaElement.GetInt32().ToString();
-                            }
-                            else
-                            {
-                                item["conta"] = "ID não encontrado";
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Erro ao processar Conta: {ex.Message}");
-                            item["conta"] = "Erro ao processar";
-                        }
-                    }
-                    
-                    // Formatar valor (tratando cultura e JsonElement numérico)
-                    if (item.ContainsKey("valor"))
-                    {
-                        try
-                        {
-                            if (item["valor"] is System.Text.Json.JsonElement valorEl && valorEl.ValueKind == System.Text.Json.JsonValueKind.Number)
-                            {
-                                var valor = valorEl.GetDecimal();
-                                item["valor"] = valor.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
-                            }
-                            else if (decimal.TryParse(item["valor"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var valor))
-                            {
-                                item["valor"] = valor.ToString("C", new System.Globalization.CultureInfo("pt-BR"));
-                            }
-                        }
-                        catch { }
-                    }
-                    
-                    // Formatar data da transação
-                    if (item.ContainsKey("dataTransacao"))
-                    {
-                        if (DateTime.TryParse(item["dataTransacao"].ToString(), out var data))
-                        {
-                            item["dataTransacao"] = data.ToString("dd/MM/yyyy HH:mm");
-                        }
-                    }
-                }
-            }
-            else if (opcaoSelecionada == "pessoas" && dados.Count > 0)
-            {
-                foreach (var item in dados)
-                {
-                    // Formatar data de nascimento
-                    if (item.ContainsKey("dataNascimento"))
-                    {
-                        if (DateTime.TryParse(item["dataNascimento"].ToString(), out var data))
-                        {
-                            item["dataNascimento"] = data.ToString("dd/MM/yyyy");
-                        }
+                        case "contas":
+                            DataFormattingService.FormatContaData(item);
+                            break;
+                        case "transacoes":
+                            DataFormattingService.FormatTransacaoData(item);
+                            break;
+                        case "pessoas":
+                            DataFormattingService.FormatPessoaData(item);
+                            break;
                     }
                 }
             }
 
             AplicarFiltro();
         }
-        else
+        catch (Exception ex)
         {
+            MessageService.ShowError($"Erro ao carregar dados: {ex.Message}");
             dados = new List<Dictionary<string, object>>();
             colunas = new List<string>();
             dadosFiltrados = new List<Dictionary<string, object>>();
@@ -457,6 +302,7 @@
     protected override async Task OnInitializedAsync()
     {
         await BuscarDados();
+        MessageService.OnMessageChanged += StateHasChanged;
     }
 
     private async Task OnOpcaoChanged()
@@ -470,74 +316,4 @@
         return Task.CompletedTask;
     }
 
-    // Conversores (não utilizados diretamente hoje, mantidos como utilitário)
-    private List<Dictionary<string, object>> ConverterContasParaDicionario(List<ContaApiModel>? contas)
-    {
-        var resultado = new List<Dictionary<string, object>>();
-        
-        if (contas == null) return resultado;
-
-        foreach (var conta in contas)
-        {
-            var dict = new Dictionary<string, object>
-            {
-                ["IdConta"] = conta.IdConta,
-                ["Pessoa"] = conta.Pessoa?.Nome ?? "Nome não encontrado",
-                ["Saldo"] = conta.Saldo,
-                ["LimiteSaqueDiario"] = conta.LimiteSaqueDiario,
-                ["Ativo"] = conta.Ativo,
-                ["TipoConta"] = conta.TipoConta,
-                ["DataCriacao"] = conta.DataCriacao.ToString("dd/MM/yyyy")
-            };
-            resultado.Add(dict);
-        }
-
-        return resultado;
-    }
-
-    private List<Dictionary<string, object>> ConverterTransacoesParaDicionario(List<TransacaoApiModel>? transacoes)
-    {
-        var resultado = new List<Dictionary<string, object>>();
-        
-        if (transacoes == null) return resultado;
-
-        foreach (var transacao in transacoes)
-        {
-            var dict = new Dictionary<string, object>
-            {
-                ["IdTransacao"] = transacao.IdTransacao,
-                ["Conta"] = transacao.Conta?.IdConta.ToString() ?? "Conta não encontrada",
-                ["Valor"] = transacao.Valor,
-                ["TipoTransacao"] = transacao.TipoTransacao,
-                ["DataTransacao"] = transacao.DataTransacao.ToString("dd/MM/yyyy HH:mm")
-            };
-            resultado.Add(dict);
-        }
-
-        return resultado;
-    }
-
-    private List<Dictionary<string, object>> ConverterPessoasParaDicionario(List<PessoaApiModel>? pessoas)
-    {
-        var resultado = new List<Dictionary<string, object>>();
-        
-        if (pessoas == null) return resultado;
-
-        foreach (var pessoa in pessoas)
-        {
-            var dict = new Dictionary<string, object>
-            {
-                ["IdPessoa"] = pessoa.IdPessoa,
-                ["Nome"] = pessoa.Nome,
-                ["Cpf"] = pessoa.Cpf,
-                ["DataNascimento"] = pessoa.DataNascimento.ToString("dd/MM/yyyy")
-            };
-            resultado.Add(dict);
-        }
-
-        return resultado;
-    }
 }
-
-
-

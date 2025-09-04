@@ -1,4 +1,6 @@
 @page "/cadastrar-pessoa"
+@inject ApiService ApiService
+@inject MessageService MessageService
 
 <!-- Página para cadastrar uma nova pessoa -->
 
@@ -9,11 +11,9 @@
         <label class="form-label" for="nome">Nome</label>
         <input id="nome" class="form-control" @bind="pessoa.Nome" placeholder="Nome completo" />
     </div>
-    <div class="mb-3">
-        <label class="form-label" for="cpf">CPF</label>
-        <input id="cpf" class="form-control" @bind="pessoa.Cpf" @bind:event="oninput" @bind:after="OnCpfAfter" placeholder="Somente números" inputmode="numeric" />
-        <div class="form-text">Somente números. Deve conter 11 dígitos.</div>
-    </div>
+    
+    <CpfInput @bind-Value="pessoa.Cpf" Label="CPF" Placeholder="Somente números" />
+    
     <div class="mb-3">
         <label class="form-label" for="dataNasc">Data de Nascimento</label>
         <InputDate id="dataNasc" class="form-control" @bind-Value="pessoa.DataNascimento" TValue="DateTime?" min="1900-01-01" max="@maxDate" />
@@ -24,58 +24,61 @@
         <button class="btn btn-secondary" @onclick="Limpar" disabled="@(isSubmitting)">Limpar</button>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(mensagem))
-    {
-        <div class="alert @mensagemClasse mt-3">@mensagem</div>
-    }
+    <MessageAlert Message="@MessageService.Message" MessageClass="@MessageService.MessageClass" />
 </div>
 
 @code {
     // Estado local do formulário
     private PessoaDto pessoa = new();
     private bool isSubmitting = false;
-    private string mensagem = string.Empty;
-    private string mensagemClasse = "alert-info";
     private readonly string maxDate = DateTime.Today.ToString("yyyy-MM-dd");
 
-    // Modelo usado para trafegar com a API
-    public class PessoaDto
+    protected override void OnInitialized()
     {
-        public int IdPessoa { get; set; }
-        public string Nome { get; set; } = string.Empty;
-        public string Cpf { get; set; } = string.Empty;
-        public DateTime? DataNascimento { get; set; }
+        MessageService.OnMessageChanged += StateHasChanged;
     }
 
     // Limpa o formulário
     private void Limpar()
     {
         pessoa = new PessoaDto();
-        
-        mensagem = string.Empty;
+        MessageService.Clear();
     }
 
     // Regras básicas de validação (nome/CPF/data)
     private bool Validar()
     {
-        if (string.IsNullOrWhiteSpace(pessoa.Nome)) { Notificar("Informe o nome.", true); return false; }
-        pessoa.Cpf = SanitizeCpf(pessoa.Cpf);
-        if (string.IsNullOrWhiteSpace(pessoa.Cpf)) { Notificar("Informe o CPF.", true); return false; }
-        if (pessoa.Cpf.Length != 11) { Notificar("CPF inválido. Deve conter 11 dígitos.", true); return false; }
-        if (!pessoa.DataNascimento.HasValue) { Notificar("Informe a data de nascimento.", true); return false; }
-        if (pessoa.DataNascimento.Value < new DateTime(1900, 1, 1) || pessoa.DataNascimento.Value > DateTime.Today)
+        if (!ValidationService.ValidateRequired(pessoa.Nome)) 
+        { 
+            MessageService.ShowError("Informe o nome."); 
+            return false; 
+        }
+        
+        pessoa.Cpf = ValidationService.SanitizeCpf(pessoa.Cpf);
+        if (!ValidationService.ValidateRequired(pessoa.Cpf)) 
+        { 
+            MessageService.ShowError("Informe o CPF."); 
+            return false; 
+        }
+        
+        if (!ValidationService.ValidateCpf(pessoa.Cpf)) 
+        { 
+            MessageService.ShowError("CPF inválido. Deve conter 11 dígitos."); 
+            return false; 
+        }
+        
+        if (!pessoa.DataNascimento.HasValue) 
+        { 
+            MessageService.ShowError("Informe a data de nascimento."); 
+            return false; 
+        }
+        
+        if (!ValidationService.ValidateDateRange(pessoa.DataNascimento, new DateTime(1900, 1, 1), DateTime.Today))
         {
-            Notificar("Data de nascimento fora do intervalo válido.", true);
+            MessageService.ShowError("Data de nascimento fora do intervalo válido.");
             return false;
         }
         return true;
-    }
-
-    // Exibe mensagens para o usuário
-    private void Notificar(string texto, bool erro)
-    {
-        mensagem = texto;
-        mensagemClasse = erro ? "alert-danger" : "alert-success";
     }
 
     // Envia o cadastro para a API
@@ -88,9 +91,6 @@
         {
             isSubmitting = true;
 
-            using var http = new HttpClient();
-            var url = "http://localhost:5049/api/Pessoa/AdicionarPessoa";
-
             var payload = new
             {
                 idPessoa = pessoa.IdPessoa,
@@ -99,23 +99,22 @@
                 dataNascimento = pessoa.DataNascimento?.ToString("O")
             };
 
-            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
-            var response = await http.PostAsync(url, content);
+            var response = await ApiService.PostAsync("/api/Pessoa/AdicionarPessoa", payload);
 
             if (response.IsSuccessStatusCode)
             {
-                Notificar("Pessoa cadastrada com sucesso!", false);
+                MessageService.ShowSuccess("Pessoa cadastrada com sucesso!");
                 Limpar();
             }
             else
             {
-                var body = await response.Content.ReadAsStringAsync();
-                Notificar($"Falha ao cadastrar: {(int)response.StatusCode} - {body}", true);
+                var errorMessage = await ApiService.GetErrorMessageAsync(response);
+                MessageService.ShowError(errorMessage);
             }
         }
         catch (Exception ex)
         {
-            Notificar($"Erro: {ex.Message}", true);
+            MessageService.ShowError($"Erro: {ex.Message}");
         }
         finally
         {
@@ -123,19 +122,6 @@
         }
     }
 
-    // Sanitiza CPF após atualização do binding
-    private void OnCpfAfter()
-    {
-        pessoa.Cpf = SanitizeCpf(pessoa.Cpf);
-    }
-
-    // Mantém apenas números e limita a 11 dígitos
-    private static string SanitizeCpf(string? cpf)
-    {
-        var digits = new string((cpf ?? string.Empty).Where(char.IsDigit).ToArray());
-        if (digits.Length > 11) digits = digits.Substring(0, 11);
-        return digits;
-    }
 }
 
 

@@ -1,0 +1,12 @@
+@using Desafio.Pages.Services
+
+<div class="alert @MessageClass mt-3" style="@(HasMessage ? "" : "display: none;")">
+    @Message
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = string.Empty;
+    [Parameter] public string MessageClass { get; set; } = "alert-info";
+    
+    private bool HasMessage => !string.IsNullOrWhiteSpace(Message);
+}

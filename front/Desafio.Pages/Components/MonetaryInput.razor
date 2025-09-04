@@ -1,0 +1,39 @@
+@using Desafio.Pages.Services
+
+<div class="mb-3">
+    <label class="form-label" for="@Id">@Label</label>
+    <input id="@Id" class="form-control" type="text" @bind="Value" @bind:event="oninput" @bind:after="OnValueAfter" @onblur="OnValueBlur" placeholder="@Placeholder" />
+    <div class="form-text">@HelpText</div>
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Label { get; set; } = "Valor";
+    [Parameter] public string Placeholder { get; set; } = "Ex.: 1,99";
+    [Parameter] public string HelpText { get; set; } = "Use vírgula para centavos (ex.: 1,99). Máx. 2 casas.";
+    [Parameter] public string Id { get; set; } = "valor";
+
+    private async Task OnValueAfter()
+    {
+        var normalized = ValidationService.NormalizeMonetaryInput(Value);
+        if (normalized != Value)
+        {
+            Value = normalized;
+            await ValueChanged.InvokeAsync(Value);
+        }
+    }
+
+    private async Task OnValueBlur(FocusEventArgs _)
+    {
+        if (ValidationService.TryParseMonetario(Value, out var valor))
+        {
+            var formatted = ValidationService.FormatMonetary(valor);
+            if (formatted != Value)
+            {
+                Value = formatted;
+                await ValueChanged.InvokeAsync(Value);
+            }
+        }
+    }
+}

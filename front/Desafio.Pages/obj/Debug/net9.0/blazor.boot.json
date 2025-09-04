@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Desafio.Pages",
   "resources": {
-    "hash": "sha256-OVl+UHPqV147TnNrsrpHVjixMX721uucA9+gqfA4z5Q=",
+    "hash": "sha256-52ROi4e5Emwj4bjEon/FZJEeBl1aK0lkEVR7YZUHfM0=",
     "fingerprinting": {
       "Microsoft.AspNetCore.Authorization.da83xzpz5r.wasm": "Microsoft.AspNetCore.Authorization.wasm",
       "Microsoft.AspNetCore.Components.vmzb2angnn.wasm": "Microsoft.AspNetCore.Components.wasm",
@@ -195,23 +195,23 @@
       "netstandard.lp03u0xxi4.wasm": "netstandard.wasm",
       "System.Private.CoreLib.9ecf2cskpd.wasm": "System.Private.CoreLib.wasm",
       "dotnet.js": "dotnet.js",
-      "dotnet.native.50iqa8w3ys.js": "dotnet.native.js",
-      "dotnet.native.pk43x8e436.wasm": "dotnet.native.wasm",
-      "dotnet.runtime.ew19f13umk.js": "dotnet.runtime.js",
+      "dotnet.native.1p93gcv9fh.js": "dotnet.native.js",
+      "dotnet.native.9msu8ucn2h.wasm": "dotnet.native.wasm",
+      "dotnet.runtime.qrl1fuqt3c.js": "dotnet.runtime.js",
       "icudt_CJK.tjcz0u77k5.dat": "icudt_CJK.dat",
       "icudt_EFIGS.tptq2av103.dat": "icudt_EFIGS.dat",
       "icudt_no_CJK.lfu7j35m59.dat": "icudt_no_CJK.dat",
-      "Desafio.Pages.7gl4pd1xy9.wasm": "Desafio.Pages.wasm",
-      "Desafio.Pages.4dox79983q.pdb": "Desafio.Pages.pdb"
+      "Desafio.Pages.cliumqsvjk.wasm": "Desafio.Pages.wasm",
+      "Desafio.Pages.fbjv32sxa0.pdb": "Desafio.Pages.pdb"
     },
     "jsModuleNative": {
-      "dotnet.native.50iqa8w3ys.js": "sha256-pQdXuxfVeqYHOwd5HUM2ERd7OnXirj9JTF37b6OdTAc="
+      "dotnet.native.1p93gcv9fh.js": "sha256-1UPiprzN3JhPftx3be7XEMaYlUN+chRF41CuttiWVtQ="
     },
     "jsModuleRuntime": {
-      "dotnet.runtime.ew19f13umk.js": "sha256-Isv/63htfX73xgn3/2cZMtk4S8xBcbmlXRgJMDv4mhI="
+      "dotnet.runtime.qrl1fuqt3c.js": "sha256-ilTXrnUF4HKbIAFVIYlRmX3ryKNZpGUObkWMF0n2Kcg="
     },
     "wasmNative": {
-      "dotnet.native.pk43x8e436.wasm": "sha256-6fprjjfQGsopiMetOMnTFT7N83KgQiUia8r8F1s/HUI="
+      "dotnet.native.9msu8ucn2h.wasm": "sha256-Yaw09m1FVxsROJ5Sa9f6SmuJebQT0b3hrKQIbo6qm5A="
     },
     "icu": {
       "icudt_CJK.tjcz0u77k5.dat": "sha256-SZLtQnRc0JkwqHab0VUVP7T3uBPSeYzxzDnpxPpUnHk=",
@@ -412,10 +412,10 @@
       "WindowsBase.361km0836k.wasm": "sha256-FacUCEIJYTnbOWgX/R9QP2QnurqRZwRIkDAH0N9z69s=",
       "mscorlib.qiu3j3msqk.wasm": "sha256-QvztpxTOEw4aMIl7zP3QtsPLNv/IWaK5wq22J4ReGrA=",
       "netstandard.lp03u0xxi4.wasm": "sha256-WVQsxULiAiEbyXLKolS7txnWVT82SsvsuMe4jJ+SqqI=",
-      "Desafio.Pages.7gl4pd1xy9.wasm": "sha256-aV0G1CHdwFK1y1wXKikbqFb2RGGUMwwZOttRkvjKTFY="
+      "Desafio.Pages.cliumqsvjk.wasm": "sha256-YEgPsqUCi/GP6M2y5Zt7BTjGdDoLzvcNenQhc/MOCaA="
     },
     "pdb": {
-      "Desafio.Pages.4dox79983q.pdb": "sha256-mLSvE5pl73pcTZNsxoc5sUOoSm+zcTqHoleInI5ZZ3Q="
+      "Desafio.Pages.fbjv32sxa0.pdb": "sha256-i57+ut8XuBswG2oVS8VOUENH1BzT1ryPJKQNoooonnI="
     }
   },
   "cacheBootResources": true,

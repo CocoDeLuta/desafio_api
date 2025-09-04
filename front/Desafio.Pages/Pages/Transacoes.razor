@@ -1,4 +1,6 @@
 @page "/transacoes"
+@inject ApiService ApiService
+@inject MessageService MessageService
 
 <!-- Página para operações de transações: Depósito, Saque e Transferência -->
 
@@ -15,64 +17,41 @@
         </select>
     </div>
 
-    <div class="mb-3 position-relative">
-        <label class="form-label" for="origem">Conta de Origem (busque pelo nome da pessoa)</label>
-        <input id="origem" class="form-control" placeholder="Digite o nome" @bind="buscaOrigem" @bind:event="oninput" @onfocus="(() => MostrarSugestoes(true))" @onblur="(() => EsconderSugestoesComDelay(true))" />
-        @if (mostrarSugestoesOrigem && sugestoesOrigem.Count > 0)
-        {
-            <div class="list-group position-absolute w-100 shadow" style="z-index: 1000; max-height: 240px; overflow-y: auto;">
-                @foreach (var c in sugestoesOrigem)
-                {
-                    <button type="button" class="list-group-item list-group-item-action" @onmousedown="(() => SelecionarConta(true, c))">
-                        Conta @c.IdConta - @c.Pessoa?.Nome
-                    </button>
-                }
-            </div>
-        }
-        @if (contaOrigem is not null)
-        {
-            <div class="form-text">Selecionado: <strong>Conta @contaOrigem.IdConta</strong> - @contaOrigem.Pessoa?.Nome</div>
-        }
-    </div>
+    <SearchWithSuggestions TItem="ContaDto" 
+                          @bind-SearchText="buscaOrigem" 
+                          @bind-SelectedItem="contaOrigem" 
+                          Items="todasContas" 
+                          Label="Conta de Origem (busque pelo nome da pessoa)"
+                          Placeholder="Digite o nome"
+                          Id="origem"
+                          GetDisplayText="@(c => $"Conta {c.IdConta} - {c.Pessoa?.Nome}")"
+                          GetSearchText="@(c => c.Pessoa?.Nome ?? "")" />
 
     @if (tipoSelecionado == "Transferencia")
     {
-        <div class="mb-3 position-relative">
-            <label class="form-label" for="destino">Conta de Destino (busque pelo nome da pessoa)</label>
-            <input id="destino" class="form-control" placeholder="Digite o nome" @bind="buscaDestino" @bind:event="oninput" @onfocus="(() => MostrarSugestoes(false))" @onblur="(() => EsconderSugestoesComDelay(false))" />
-            @if (mostrarSugestoesDestino && sugestoesDestino.Count > 0)
-            {
-                <div class="list-group position-absolute w-100 shadow" style="z-index: 1000; max-height: 240px; overflow-y: auto;">
-                    @foreach (var c in sugestoesDestino)
-                    {
-                        <button type="button" class="list-group-item list-group-item-action" @onmousedown="(() => SelecionarConta(false, c))">
-                            Conta @c.IdConta - @c.Pessoa?.Nome
-                        </button>
-                    }
-                </div>
-            }
-            @if (contaDestino is not null)
-            {
-                <div class="form-text">Selecionado: <strong>Conta @contaDestino.IdConta</strong> - @contaDestino.Pessoa?.Nome</div>
-            }
-        </div>
+        <SearchWithSuggestions TItem="ContaDto" 
+                              @bind-SearchText="buscaDestino" 
+                              @bind-SelectedItem="contaDestino" 
+                              Items="todasContas" 
+                              Label="Conta de Destino (busque pelo nome da pessoa)"
+                              Placeholder="Digite o nome"
+                              Id="destino"
+                              GetDisplayText="@(c => $"Conta {c.IdConta} - {c.Pessoa?.Nome}")"
+                              GetSearchText="@(c => c.Pessoa?.Nome ?? "")" />
     }
 
-    <div class="mb-3">
-        <label class="form-label" for="valor">@LabelValor</label>
-        <input id="valor" class="form-control" type="text" placeholder="Ex.: 1,99" @bind="valorStr" @bind:event="oninput" @bind:after="OnValorAfter" @onblur="OnValorBlur" />
-        <div class="form-text">Use vírgula para centavos (ex.: 1,99). Máx. 2 casas.</div>
-    </div>
+    <MonetaryInput @bind-Value="valorStr" 
+                   Label="@LabelValor" 
+                   Placeholder="Ex.: 1,99" 
+                   HelpText="Use vírgula para centavos (ex.: 1,99). Máx. 2 casas." 
+                   Id="valor" />
 
     <div class="d-flex gap-2">
         <button class="btn btn-primary" @onclick="Executar" disabled="@(executando)">Executar</button>
         <button class="btn btn-secondary" @onclick="Limpar" disabled="@(executando)">Limpar</button>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(mensagem))
-    {
-        <div class="alert @mensagemClasse mt-3">@mensagem</div>
-    }
+    <MessageAlert Message="@MessageService.Message" MessageClass="@MessageService.MessageClass" />
 </div>
 
 @code {
@@ -83,43 +62,29 @@
     private List<ContaDto> todasContas = new();
     private string buscaOrigem = string.Empty;
     private string buscaDestino = string.Empty;
-    private List<ContaDto> sugestoesOrigem = new();
-    private List<ContaDto> sugestoesDestino = new();
-    private bool mostrarSugestoesOrigem = false;
-    private bool mostrarSugestoesDestino = false;
     private ContaDto? contaOrigem;
     private ContaDto? contaDestino;
     private decimal valor;
     private string valorStr = string.Empty;
     private bool executando = false;
-    private string mensagem = string.Empty;
-    private string mensagemClasse = "alert-info";
-
-    // DTOs mínimos para exibição
-    public class PessoaDto { public int IdPessoa { get; set; } public string Nome { get; set; } = string.Empty; }
-    public class ContaDto { public int IdConta { get; set; } public PessoaDto? Pessoa { get; set; } }
 
     // Carrega contas disponíveis para busca
     protected override async Task OnInitializedAsync()
     {
         await CarregarContas();
-        AtualizarSugestoes(true);
-        AtualizarSugestoes(false);
+        MessageService.OnMessageChanged += StateHasChanged;
     }
 
     private async Task CarregarContas()
     {
         try
         {
-            using var http = new HttpClient();
-            var url = "http://localhost:5049/api/Conta/ObterTodasContas";
-            var json = await http.GetStringAsync(url);
-            var contas = System.Text.Json.JsonSerializer.Deserialize<List<ContaDto>>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var contas = await ApiService.GetAsync<List<ContaDto>>("/api/Conta/ObterTodasContas");
             todasContas = contas ?? new List<ContaDto>();
         }
         catch (Exception ex)
         {
-            Notificar($"Erro ao carregar contas: {ex.Message}", true);
+            MessageService.ShowError($"Erro ao carregar contas: {ex.Message}");
         }
     }
 
@@ -135,89 +100,45 @@
         }
     }
 
-    // Controle de exibição de sugestões
-    private void MostrarSugestoes(bool origem)
-    {
-        if (origem) mostrarSugestoesOrigem = true; else mostrarSugestoesDestino = true;
-        AtualizarSugestoes(origem);
-    }
-
-    private async Task EsconderSugestoesComDelay(bool origem)
-    {
-        await Task.Delay(150);
-        if (origem) mostrarSugestoesOrigem = false; else mostrarSugestoesDestino = false;
-        StateHasChanged();
-    }
-
-    // Atualiza sugestões conforme o texto digitado
-    private void AtualizarSugestoes(bool origem)
-    {
-        var termo = (origem ? buscaOrigem : buscaDestino) ?? string.Empty;
-        var lista = todasContas
-            .Where(c => (c.Pessoa?.Nome ?? string.Empty).Contains(termo, StringComparison.OrdinalIgnoreCase))
-            .Take(8)
-            .ToList();
-        if (origem) sugestoesOrigem = lista; else sugestoesDestino = lista;
-    }
-
-    // Seleciona uma conta da lista de sugestões
-    private void SelecionarConta(bool origem, ContaDto c)
-    {
-        if (origem)
-        {
-            contaOrigem = c;
-            buscaOrigem = c.Pessoa?.Nome ?? $"Conta {c.IdConta}";
-            mostrarSugestoesOrigem = false;
-        }
-        else
-        {
-            contaDestino = c;
-            buscaDestino = c.Pessoa?.Nome ?? $"Conta {c.IdConta}";
-            mostrarSugestoesDestino = false;
-        }
-    }
-
     // Executa a transação na API
     private async Task Executar()
     {
         if (executando) return;
         if (!Validar()) return;
+        
         try
         {
             executando = true;
-            using var http = new HttpClient();
             HttpResponseMessage response;
             var valorParam = valor.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            
             if (tipoSelecionado == "Deposito")
             {
-                var url = $"http://localhost:5049/api/Transacao/Deposito/{contaOrigem!.IdConta}/{valorParam}";
-                response = await http.PostAsync(url, new StringContent(""));
+                response = await ApiService.PostAsync($"/api/Transacao/Deposito/{contaOrigem!.IdConta}/{valorParam}", new { });
             }
             else if (tipoSelecionado == "Saque")
             {
-                var url = $"http://localhost:5049/api/Transacao/Saque/{contaOrigem!.IdConta}/{valorParam}";
-                response = await http.PostAsync(url, new StringContent(""));
+                response = await ApiService.PostAsync($"/api/Transacao/Saque/{contaOrigem!.IdConta}/{valorParam}", new { });
             }
             else // Transferencia
             {
-                var url = $"http://localhost:5049/api/Transacao/Transferencia/{contaOrigem!.IdConta}/{contaDestino!.IdConta}/{valorParam}";
-                response = await http.PostAsync(url, new StringContent(""));
+                response = await ApiService.PostAsync($"/api/Transacao/Transferencia/{contaOrigem!.IdConta}/{contaDestino!.IdConta}/{valorParam}", new { });
             }
 
             if (response.IsSuccessStatusCode)
             {
-                Notificar("Operação realizada com sucesso!", false);
+                MessageService.ShowSuccess("Operação realizada com sucesso!");
                 LimparValores();
             }
             else
             {
-                var body = await response.Content.ReadAsStringAsync();
-                Notificar($"Falha na operação: {(int)response.StatusCode} - {body}", true);
+                var errorMessage = await ApiService.GetErrorMessageAsync(response);
+                MessageService.ShowError(errorMessage);
             }
         }
         catch (Exception ex)
         {
-            Notificar($"Erro: {ex.Message}", true);
+            MessageService.ShowError($"Erro: {ex.Message}");
         }
         finally
         {
@@ -233,7 +154,7 @@
         buscaOrigem = string.Empty;
         buscaDestino = string.Empty;
         LimparValores();
-        mensagem = string.Empty;
+        MessageService.Clear();
     }
 
     // Limpa apenas campos de valor e destino
@@ -253,29 +174,39 @@
     {
         if (contaOrigem == null)
         {
-            Notificar("Selecione a conta de origem.", true);
+            MessageService.ShowError("Selecione a conta de origem.");
             return false;
         }
-        // Converter valorStr aceitando vírgula (pt-BR) ou ponto
-        if (!TryParseMonetario(valorStr, out valor))
+        
+        if (!ValidationService.TryParseMonetario(valorStr, out valor))
         {
-            Notificar("Valor inválido. Ex.: 1,99", true);
+            MessageService.ShowError("Valor inválido. Ex.: 1,99");
             return false;
         }
+        
         if (valor <= 0)
         {
-            Notificar("Informe um valor maior que zero.", true);
+            MessageService.ShowError("Informe um valor maior que zero.");
             return false;
         }
-        if (tipoSelecionado == "Transferencia" && contaDestino == null)
+        
+        if (tipoSelecionado == "Transferencia")
         {
-            Notificar("Selecione a conta de destino.", true);
-            return false;
-        }
-        if (tipoSelecionado == "Transferencia" && contaDestino!.IdConta == contaOrigem!.IdConta)
-        {
-            Notificar("A conta de destino deve ser diferente da origem.", true);
-            return false;
+            if (contaDestino == null)
+            {
+                MessageService.ShowError("Selecione a conta de destino.");
+                return false;
+            }
+            if (contaDestino.IdConta == contaOrigem.IdConta)
+            {
+                MessageService.ShowError("A conta de destino deve ser diferente da origem.");
+                return false;
+            }
+            if (contaOrigem.TipoConta == "Salario" && contaOrigem.Pessoa?.IdPessoa != contaDestino.Pessoa?.IdPessoa)
+            {
+                MessageService.ShowError("Não é possível transferir de conta salário para conta de outro titular.");
+                return false;
+            }
         }
         return true;
     }
@@ -287,58 +218,6 @@
         "Saque" => "Valor do Saque",
         _ => "Valor da Transferência"
     };
-
-    // Utilitário de mensagens
-    private void Notificar(string texto, bool erro)
-    {
-        mensagem = texto;
-        mensagemClasse = erro ? "alert-danger" : "alert-success";
-    }
-
-    // Normaliza entrada de valor para no máximo duas casas decimais
-    private void OnValorAfter()
-    {
-        var texto = (valorStr ?? string.Empty).Trim();
-        texto = texto.Replace('.', ',');
-        var filtrado = new string(texto.Where(c => char.IsDigit(c) || c == ',').ToArray());
-        var primeiraVirgula = filtrado.IndexOf(',');
-        if (primeiraVirgula >= 0)
-        {
-            var parteInteira = filtrado.Substring(0, primeiraVirgula);
-            var parteDecimal = new string(filtrado.Substring(primeiraVirgula + 1).Where(char.IsDigit).ToArray());
-            if (parteDecimal.Length > 2) parteDecimal = parteDecimal.Substring(0, 2);
-            filtrado = parteInteira + "," + parteDecimal;
-        }
-        valorStr = filtrado;
-    }
-
-    // Formata com 2 casas ao sair do campo
-    private void OnValorBlur(FocusEventArgs _)
-    {
-        if (TryParseMonetario(valorStr, out var v))
-        {
-            valorStr = v.ToString("F2", new System.Globalization.CultureInfo("pt-BR"));
-        }
-    }
-
-    // Conversão robusta de string monetária para decimal
-    private static bool TryParseMonetario(string? texto, out decimal valor)
-    {
-        texto = (texto ?? string.Empty).Trim();
-        if (string.IsNullOrEmpty(texto)) { valor = 0m; return false; }
-        if (decimal.TryParse(texto, System.Globalization.NumberStyles.Number, new System.Globalization.CultureInfo("pt-BR"), out valor))
-        {
-            valor = Math.Round(valor, 2, MidpointRounding.AwayFromZero);
-            return true;
-        }
-        var alt = texto.Replace(',', '.');
-        if (decimal.TryParse(alt, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out valor))
-        {
-            valor = Math.Round(valor, 2, MidpointRounding.AwayFromZero);
-            return true;
-        }
-        return false;
-    }
 }
 
 

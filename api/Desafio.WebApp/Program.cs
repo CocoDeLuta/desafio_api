@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Design;
 using Desafio.Data;
 using Desafio.Services;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuração de CORS
@@ -27,13 +26,7 @@ builder.Services.AddDbContext<EFCoreContext>(options => options.UseLazyLoadingPr
 
 builder.Services.AddControllers(); // This is required to use the [ApiController] attribute
 
-
 var app = builder.Build();
-
-// Ativa o CORS
-app.UseCors("AllowAll");
-
-app.UseRouting();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -42,12 +35,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
-
-
+// Redirecionamento HTTPS antes do roteamento
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+// Ativa o CORS (deve ficar entre UseRouting e MapControllers/UseEndpoints)
+app.UseCors("AllowAll");
+
+app.MapControllers();
 
 app.Run();
